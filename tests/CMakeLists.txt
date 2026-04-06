@@ -4,6 +4,7 @@ file(GLOB_RECURSE LOGIC_SOURCES ../src/logic/*.cpp)
 
 add_executable(NumVerseTests
     test_main.cpp
+    test_game_cell.cpp
     ${LOGIC_SOURCES}
 )
 
