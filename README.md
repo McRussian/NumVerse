@@ -22,8 +22,8 @@
 
 ## Общие возможности
 
-- Настройка сложности: предустановленные уровни или ручные параметры
-- Таймер и статистика по каждой игре и уровню
+- Настройка сложности: 5 уровней (Beginner → Expert)
+- Таймер и таблица рекордов по каждому уровню (топ по очкам и по времени)
 - Система подсказок
 - Единый дизайн: общие шрифты, цвета, анимации
 
@@ -31,8 +31,10 @@
 
 ## Технологии
 
-- **Язык:** C++
-- **Фреймворк:** Qt
+- **Язык:** C++20
+- **Фреймворк:** Qt6 / QWidgets
+- **Сборка:** CMake
+- **Тесты:** GTest (логика — чистый C++)
 - **Платформа:** Linux (Desktop)
 
 ---
@@ -41,18 +43,105 @@
 
 ```
 NumVerse/
-├── doc/                  # Описание игр
 ├── src/
-│   ├── core/             # Общий движок: поле, таймер, статистика
-│   └── games/            # Модули отдельных игр
-└── README.md
+│   ├── logic/
+│   │   ├── data/       — структуры данных (чистый C++)
+│   │   ├── rules/      — правила конкретных игр (чистый C++)
+│   │   ├── score_board — таблица рекордов
+│   │   ├── i_game_rules, game_logic — игровой движок
+│   ├── core/           — Qt-ядро (GameBoard, GameWindow)
+│   ├── games/          — Qt-обёртки над логикой
+│   └── ui/             — MainWindow, MenuWidget
+├── tests/
+│   ├── data/           — тесты структур данных
+│   ├── rules/          — тесты правил игр
+│   └── ...             — тесты движка и рекордов
+├── data/               — JSON уровни и статистика
+├── doc/                — описание игр и архитектуры
+└── run_tests.sh        — запуск всех тестов
 ```
 
 ---
 
-## Разработка
+## План разработки
 
-Планируется поэтапно:
-1. Общий движок (поле, таймер, меню)
-2. Числовой Хаос — первая играбельная версия
-3. Остальные игры подключаются как отдельные модули
+### Этап 1 — Скелет ✅
+| | Задача |
+|-|--------|
+| ✅ | CMakeLists.txt (app + tests), main.cpp |
+| ✅ | GTest, run_tests.sh |
+
+### Этап 2 — Структуры данных ✅
+| | Задача |
+|-|--------|
+| ✅ | `GameCell`, `CellState` |
+| ✅ | `Board` |
+| ✅ | `Selection` |
+| ✅ | `GameConfig`, `Difficulty` |
+| ✅ | `GameState`, `GameStatus` |
+| ✅ | `GameResult` |
+
+### Этап 3 — LevelData + ScoreBoard ✅
+| | Задача |
+|-|--------|
+| ✅ | `LevelData` (isValid, toConfig) |
+| ✅ | `ScoreBoard` (топ-N по уровням, RankingMode) |
+
+### Этап 4 — Игровой движок
+| | Задача |
+|-|--------|
+| ⬜ | `IGameRules` + `StubRules` |
+| ⬜ | `GameLogic::init`, `reset`, `getState` |
+| ⬜ | `GameLogic::selectCell`, `cancelSelection` |
+| ⬜ | `GameLogic::confirmSelection` |
+| ⬜ | `GameLogic::tick`, `addSecond` |
+| ⬜ | `GameLogic::buildResult`, `getHint` |
+
+### Этап 5 — NumberChaosRules
+| | Задача |
+|-|--------|
+| ⬜ | `initBoard` |
+| ⬜ | Типы последовательностей |
+| ⬜ | `isValidSelection` |
+| ⬜ | `applySelection` |
+| ⬜ | `isWon`, `isLost` |
+| ⬜ | `getHint` |
+
+### Этап 6 — GameBoard (Qt)
+| | Задача |
+|-|--------|
+| ⬜ | Отрисовка сетки по `Board` |
+| ⬜ | Состояния ячеек |
+| ⬜ | Клики → сигнал `cellClicked` |
+| ⬜ | `setSelection`, `highlightCells` |
+
+### Этап 7 — NumberChaosGame + GameWindow
+| | Задача |
+|-|--------|
+| ⬜ | `AbstractGame` |
+| ⬜ | `NumberChaosGame` |
+| ⬜ | `GameWindow` (компоновка) |
+| ⬜ | `GameWindow` таймеры + signal-slot |
+
+### Этап 8 — UI-оболочка
+| | Задача |
+|-|--------|
+| ⬜ | `MenuWidget` |
+| ⬜ | `SettingsDialog` |
+| ⬜ | `MainWindow` |
+
+### Этап 9 — Persistence
+| | Задача |
+|-|--------|
+| ⬜ | `LevelLoader` |
+| ⬜ | `StatisticsManager` |
+| ⬜ | Интеграция |
+
+### Этап 10+ — Остальные игры
+| | Задача |
+|-|--------|
+| ⬜ | SumBoom |
+| ⬜ | NumberTetris |
+| ⬜ | MagicSquare |
+| ⬜ | Make24 |
+| ⬜ | NumberMaze |
