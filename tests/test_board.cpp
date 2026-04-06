@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "logic/board.h"
+#include "logic/data/board.h"
 
 TEST(BoardTest, DefaultConstruction)
 {

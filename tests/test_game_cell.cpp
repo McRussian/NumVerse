@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "logic/game_cell.h"
+#include "logic/data/game_cell.h"
 
 TEST(GameCellTest, DefaultConstruction)
 {

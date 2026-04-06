@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "logic/selection.h"
+#include "logic/data/selection.h"
 
 TEST(SelectionTest, DefaultEmpty)
 {

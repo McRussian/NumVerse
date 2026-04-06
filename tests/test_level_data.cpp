@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "logic/level_data.h"
+#include "logic/data/level_data.h"
 
 static LevelData makeValid(uint8_t rows = 4, uint8_t cols = 4)
 {
