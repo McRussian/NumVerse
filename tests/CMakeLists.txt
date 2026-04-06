@@ -15,3 +15,4 @@ endfunction()
 
 # --- tests ---
 add_numverse_test(test_game_cell)
+add_numverse_test(test_board)
