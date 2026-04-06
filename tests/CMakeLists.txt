@@ -3,9 +3,9 @@ include(GoogleTest)
 
 file(GLOB_RECURSE LOGIC_SOURCES ../src/logic/*.cpp)
 
-function(add_numverse_test name)
+function(add_numverse_test name source)
     add_executable(${name}
-        ${name}.cpp
+        ${source}
         ${LOGIC_SOURCES}
     )
     target_link_libraries(${name} PRIVATE GTest::gtest_main)
@@ -13,8 +13,8 @@ function(add_numverse_test name)
     gtest_discover_tests(${name})
 endfunction()
 
-# --- tests ---
-add_numverse_test(test_game_cell)
-add_numverse_test(test_board)
-add_numverse_test(test_selection)
-add_numverse_test(test_level_data)
+# --- data ---
+add_numverse_test(test_game_cell  data/test_game_cell.cpp)
+add_numverse_test(test_board      data/test_board.cpp)
+add_numverse_test(test_selection  data/test_selection.cpp)
+add_numverse_test(test_level_data data/test_level_data.cpp)
