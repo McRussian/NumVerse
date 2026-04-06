@@ -1,18 +1,21 @@
 #pragma once
 
-#include <cstdint>
+#include "cell_state.h"
 
-enum class CellState : uint8_t {
-    Normal,
-    Selected,
-    Highlighted,
-    Locked,
-    Empty
-};
+class GameCell {
+public:
+    GameCell() = default;
+    GameCell(uint16_t value, CellState state = CellState::Normal);
 
-struct GameCell {
-    uint16_t  value = 0;
-    CellState state = CellState::Normal;
+    uint16_t  value() const;
+    CellState state() const;
+
+    void setValue(uint16_t value);
+    void setState(CellState state);
 
     bool operator==(const GameCell&) const = default;
+
+private:
+    uint16_t  m_value = 0;
+    CellState m_state = CellState::Normal;
 };

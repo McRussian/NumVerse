@@ -1,15 +1,14 @@
 #!/bin/bash
 
-BUILD_DIR="$(dirname "$0")/build/tests"
+ROOT_DIR="$(dirname "$0")"
+BUILD_DIR="$ROOT_DIR/build/tests"
 PASS=0
 FAIL=0
 FAILED_BINS=()
 
-if [ ! -d "$BUILD_DIR" ]; then
-    echo "Build directory not found: $BUILD_DIR"
-    echo "Run: cmake --build build"
-    exit 1
-fi
+cmake -B "$ROOT_DIR/build" -S "$ROOT_DIR" -DCMAKE_BUILD_TYPE=Debug 2>&1 | tail -2
+cmake --build "$ROOT_DIR/build" 2>&1 | tail -5
+echo ""
 
 for bin in "$BUILD_DIR"/test_*; do
     [ -f "$bin" ] && [ -x "$bin" ] || continue
