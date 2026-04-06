@@ -5,6 +5,9 @@
 #include <cstdint>
 #include <stdexcept>
 
+// Двумерное игровое поле: хранит сетку GameCell фиксированного размера.
+// Используется GameLogic как основная структура данных состояния игры.
+// Доступ к ячейкам — через at(row, col), индексация row-major.
 class Board {
 public:
     Board() = default;

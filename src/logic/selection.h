@@ -3,6 +3,9 @@
 #include <vector>
 #include <cstdint>
 
+// Набор выделенных игроком ячеек (по координатам row/col).
+// Используется GameLogic для накопления хода до его подтверждения.
+// Дубликаты игнорируются; порядок добавления сохраняется.
 class Selection {
 public:
     void add(uint8_t row, uint8_t col);

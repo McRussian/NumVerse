@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+// Параметры одной игровой сессии: размер поля, сложность, ограничения.
+// Формируется из LevelData и передаётся в GameLogic::init().
 struct GameConfig {
     uint8_t  gridRows      = 0;
     uint8_t  gridCols      = 0;
