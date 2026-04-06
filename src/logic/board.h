@@ -13,14 +13,14 @@ public:
     Board() = default;
     Board(uint8_t rows, uint8_t cols);
 
-    GameCell&       at(uint8_t row, uint8_t col);
+    GameCell& at(uint8_t row, uint8_t col);
     const GameCell& at(uint8_t row, uint8_t col) const;
-    bool            isValid(uint8_t row, uint8_t col) const;
+    bool isValid(uint8_t row, uint8_t col) const;
 
     uint8_t rows() const;
     uint8_t cols() const;
-    size_t  size() const;
-    bool    empty() const;
+    size_t size() const;
+    bool empty() const;
 
 private:
     std::vector<GameCell> m_cells;
