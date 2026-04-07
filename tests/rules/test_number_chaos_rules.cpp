@@ -301,6 +301,72 @@ TEST(NumberChaosRulesTest, PartialClearDoesNotSetWon) {
     EXPECT_EQ(state.status, GameStatus::Playing);
 }
 
+// --- getHint ---
+
+TEST(NumberChaosRulesTest, HintEmptyBoard) {
+    NumberChaosRules rules;
+    Board board(2, 3);
+    for (uint8_t r = 0; r < 2; ++r)
+        for (uint8_t c = 0; c < 3; ++c)
+            board.at(r, c) = GameCell(0, CellState::Empty);
+    EXPECT_TRUE(rules.getHint(board).empty());
+}
+
+TEST(NumberChaosRulesTest, HintNoValidSequence) {
+    // {3,7,12} — не образует валидную последовательность
+    NumberChaosRules rules;
+    Board board(1, 3);
+    board.at(0, 0) = GameCell(3);
+    board.at(0, 1) = GameCell(7);
+    board.at(0, 2) = GameCell(12);
+    EXPECT_TRUE(rules.getHint(board).empty());
+}
+
+TEST(NumberChaosRulesTest, HintFindsSequence) {
+    // {2,5,8} — арифм. +3
+    NumberChaosRules rules;
+    Board board(1, 3);
+    board.at(0, 0) = GameCell(2);
+    board.at(0, 1) = GameCell(5);
+    board.at(0, 2) = GameCell(8);
+    auto sel = rules.getHint(board);
+    ASSERT_FALSE(sel.empty());
+    std::vector<uint16_t> values;
+    for (auto [r, c] : sel.cells())
+        values.push_back(board.at(r, c).value());
+    EXPECT_TRUE(NumberChaosRules::isValidSequence(values));
+}
+
+TEST(NumberChaosRulesTest, HintFindsInterleavedSequence) {
+    // Две последовательности смешаны: seq1=[2,5,8], seq2=[1,3]
+    // После merge: [2,1,5,3,8] — seq1 идёт в порядке чтения на позициях 0,2,4
+    NumberChaosRules rules;
+    Board board(1, 5);
+    board.at(0, 0) = GameCell(2);
+    board.at(0, 1) = GameCell(1);
+    board.at(0, 2) = GameCell(5);
+    board.at(0, 3) = GameCell(3);
+    board.at(0, 4) = GameCell(8);
+    auto sel = rules.getHint(board);
+    ASSERT_FALSE(sel.empty());
+    std::vector<uint16_t> values;
+    for (auto [r, c] : sel.cells())
+        values.push_back(board.at(r, c).value());
+    EXPECT_TRUE(NumberChaosRules::isValidSequence(values));
+}
+
+TEST(NumberChaosRulesTest, HintPrefersShorterSequence) {
+    // {2,5,8,11}: есть тройки и четвёрка, hint должен вернуть 3 ячейки
+    NumberChaosRules rules;
+    Board board(1, 4);
+    board.at(0, 0) = GameCell(2);
+    board.at(0, 1) = GameCell(5);
+    board.at(0, 2) = GameCell(8);
+    board.at(0, 3) = GameCell(11);
+    auto sel = rules.getHint(board);
+    EXPECT_EQ(sel.size(), 3u);
+}
+
 // --- initBoard ---
 
 TEST(NumberChaosRulesTest, InitBoardFillsAllCells) {

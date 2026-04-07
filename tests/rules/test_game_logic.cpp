@@ -234,3 +234,11 @@ TEST(GameLogicTest, ResetClearsSelection) {
     gl.reset();
     EXPECT_TRUE(gl.getState().selection.empty());
 }
+
+// --- getHint ---
+
+TEST(GameLogicTest, GetHintDelegatesToRules) {
+    // StubRules::getHint всегда возвращает пустой Selection
+    auto gl = makeGame();
+    EXPECT_TRUE(gl.getHint().empty());
+}

@@ -33,6 +33,8 @@ public:
 
     GameResult buildResult(const std::string& playerName) const;
 
+    Selection getHint() const;
+
 private:
     GameConfig m_config;
     GameState m_state;

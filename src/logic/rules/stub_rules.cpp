@@ -11,3 +11,7 @@ void StubRules::applySelection(GameState& state, const GameConfig&) {
     state.score += 10;
     state.selection.clear();
 }
+
+Selection StubRules::getHint(const Board&) const {
+    return {};
+}

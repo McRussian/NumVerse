@@ -104,7 +104,7 @@ NumVerse/
 | ✅ | Типы последовательностей (9 типов) |
 | ✅ | `isValidSequence` |
 | ✅ | `applySelection` (удаление ячеек, счёт, победа) |
-| ⬜ | `getHint` |
+| ✅ | `getHint` |
 
 ### Этап 6 — GameBoard (Qt)
 | | Задача |

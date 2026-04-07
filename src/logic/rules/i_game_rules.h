@@ -16,4 +16,9 @@ public:
     // Обработать текущую selection из state: начислить очки, убрать ячейки, выставить Won.
     // Обязан очистить state.selection перед возвратом.
     virtual void applySelection(GameState& state, const GameConfig& config) = 0;
+
+    // Найти любую валидную последовательность на поле и вернуть её как Selection.
+    // Ячейки в Selection идут в порядке чтения (row-major).
+    // Возвращает пустой Selection если валидных ходов нет.
+    virtual Selection getHint(const Board& board) const = 0;
 };

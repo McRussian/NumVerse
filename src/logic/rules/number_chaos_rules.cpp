@@ -2,6 +2,7 @@
 #include "logic/data/game_cell.h"
 #include <cmath>
 #include <algorithm>
+#include <numeric>
 
 // Факториалы, умещающиеся в uint16_t: 1!..8!
 static const std::vector<uint16_t> FACTORIALS = {1, 2, 6, 24, 120, 720, 5040, 40320};
@@ -159,6 +160,47 @@ bool NumberChaosRules::isSecondOrder(const std::vector<uint16_t>& v) {
     for (size_t i = 2; i < diffs.size(); ++i)
         if (diffs[i] - diffs[i - 1] != second_diff) return false;
     return true;
+}
+
+static bool nextCombination(std::vector<size_t>& idx, size_t n) {
+    int i = static_cast<int>(idx.size()) - 1;
+    while (i >= 0 && idx[i] == n - idx.size() + static_cast<size_t>(i))
+        --i;
+    if (i < 0) return false;
+    ++idx[i];
+    for (size_t j = static_cast<size_t>(i) + 1; j < idx.size(); ++j)
+        idx[j] = idx[j - 1] + 1;
+    return true;
+}
+
+Selection NumberChaosRules::getHint(const Board& board) const {
+    std::vector<std::pair<uint8_t, uint8_t>> cells;
+    for (uint8_t r = 0; r < board.rows(); ++r)
+        for (uint8_t c = 0; c < board.cols(); ++c)
+            if (board.at(r, c).state() != CellState::Empty)
+                cells.push_back({r, c});
+
+    size_t n = cells.size();
+    if (n < 3) return {};
+
+    size_t maxSize = std::min(n, size_t{5});
+    for (size_t size = 3; size <= maxSize; ++size) {
+        std::vector<size_t> idx(size);
+        std::iota(idx.begin(), idx.end(), 0);
+        do {
+            std::vector<uint16_t> values;
+            values.reserve(size);
+            for (size_t i : idx)
+                values.push_back(board.at(cells[i].first, cells[i].second).value());
+            if (isValidSequence(values)) {
+                Selection sel;
+                for (size_t i : idx)
+                    sel.add(cells[i].first, cells[i].second);
+                return sel;
+            }
+        } while (nextCombination(idx, n));
+    }
+    return {};
 }
 
 bool NumberChaosRules::isBoardCleared(const Board& board) {
