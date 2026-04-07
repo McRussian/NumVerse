@@ -16,6 +16,9 @@ endfunction()
 # --- logic ---
 add_numverse_test(test_score_board test_score_board.cpp)
 
+# --- rules / logic ---
+add_numverse_test(test_game_logic rules/test_game_logic.cpp)
+
 # --- data ---
 add_numverse_test(test_game_cell  data/test_game_cell.cpp)
 add_numverse_test(test_board      data/test_board.cpp)
