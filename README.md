@@ -87,24 +87,23 @@ NumVerse/
 | ✅ | `LevelData` (isValid, toConfig) |
 | ✅ | `ScoreBoard` (топ-N по уровням, RankingMode) |
 
-### Этап 4 — Игровой движок
+### Этап 4 — Игровой движок ✅
 | | Задача |
 |-|--------|
-| ⬜ | `IGameRules` + `StubRules` |
-| ⬜ | `GameLogic::init`, `reset`, `getState` |
-| ⬜ | `GameLogic::selectCell`, `cancelSelection` |
-| ⬜ | `GameLogic::confirmSelection` |
-| ⬜ | `GameLogic::tick`, `addSecond` |
-| ⬜ | `GameLogic::buildResult`, `getHint` |
+| ✅ | `IGameRules` + `StubRules` |
+| ✅ | `GameLogic::init`, `reset`, `getState` |
+| ✅ | `GameLogic::select` (toggle) |
+| ✅ | `GameLogic::applySelection` |
+| ✅ | `GameLogic::tick` |
+| ✅ | `GameLogic::buildResult` |
 
-### Этап 5 — NumberChaosRules
+### Этап 5 — NumberChaosRules ✅
 | | Задача |
 |-|--------|
-| ⬜ | `initBoard` |
-| ⬜ | Типы последовательностей |
-| ⬜ | `isValidSelection` |
-| ⬜ | `applySelection` |
-| ⬜ | `isWon`, `isLost` |
+| ✅ | `initBoard` (placeholder) |
+| ✅ | Типы последовательностей (9 типов) |
+| ✅ | `isValidSequence` |
+| ✅ | `applySelection` (удаление ячеек, счёт, победа) |
 | ⬜ | `getHint` |
 
 ### Этап 6 — GameBoard (Qt)
