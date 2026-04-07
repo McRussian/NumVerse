@@ -318,44 +318,48 @@ class IGameRules {
 public:
     virtual ~IGameRules() = default;
 
-    virtual void     initBoard(Board& board, const GameConfig& cfg) = 0;
-    virtual bool     isValidSelection(const Board& board,
-                                      const Selection& sel) const = 0;
-    virtual uint32_t applySelection(Board& board,
-                                    const Selection& sel) const = 0;
-    virtual bool     isWon(const Board& board) const = 0;
-    virtual bool     isLost(const Board& board, uint16_t movesLeft) const = 0;
-    virtual Selection getHint(const Board& board) const = 0;
-    virtual void     tick(Board& board, uint32_t deltaMs) {}
+    // Заполнить поле начальными значениями перед стартом.
+    virtual void initBoard(Board& board, const GameConfig& config) = 0;
+
+    // Обработать текущую selection из state.
+    // Если ход валидный: удалить ячейки, начислить очки, выставить Won если поле очищено.
+    // Если невалидный: только очистить selection (ход НЕ считается потраченным — см. GameLogic).
+    // Обязан очистить state.selection перед возвратом.
+    virtual void applySelection(GameState& state, const GameConfig& config) = 0;
 };
 ```
+
+**Решения:**
+- `applySelection` получает весь `GameState` и изменяет его напрямую — проще и гибче
+- Невалидный ход не тратит `movesLeft` — GameLogic декрементирует только если rules сняли хотя бы одну ячейку (т.е. `score` вырос)
 
 ### GameLogic
 
 ```cpp
 class GameLogic {
+    GameConfig m_config;
+    GameState  m_state;
     std::unique_ptr<IGameRules> m_rules;
-    Board      m_board;
-    Selection  m_selection;
-    GameStatus m_status    = GameStatus::Idle;
-    uint32_t   m_score     = 0;
-    uint16_t   m_movesLeft = 0;
-    uint32_t   m_elapsed   = 0;
 
 public:
-    explicit GameLogic(std::unique_ptr<IGameRules> rules);
+    // Инициализировать новую сессию. Поле заполняется, статус → Playing.
+    void init(GameConfig config, std::unique_ptr<IGameRules> rules);
 
-    void      init(const GameConfig& cfg);
-    void      reset();
-    bool      selectCell(uint8_t row, uint8_t col);
-    bool      confirmSelection();
-    void      cancelSelection();
-    void      tick(uint32_t deltaMs);
-    void      addSecond();
+    // Добавить/убрать ячейку из selection (toggle). Игнорируется если не Playing.
+    void select(uint8_t row, uint8_t col);
 
-    GameState  getState() const;
-    GameResult buildResult() const;
-    Selection  getHint() const;
+    // Передать selection в rules. Если score вырос — декрементировать movesLeft.
+    // Игнорируется если не Playing или selection пустая.
+    void applySelection();
+
+    // Продвинуть таймер на secs секунд. При достижении timeLimitSecs → Lost.
+    void tick(uint32_t secs);
+
+    // Перезапустить сессию с теми же config и rules.
+    void reset();
+
+    const GameState& getState() const;
+    GameResult buildResult(const std::string& playerName) const;
 };
 ```
 
