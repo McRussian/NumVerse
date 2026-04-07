@@ -32,9 +32,11 @@ void GameLogic::applySelection() {
     if (m_state.selection.empty())
         return;
 
+    uint32_t scoreBefore = m_state.score;
     m_rules->applySelection(m_state, m_config);
+    bool validMove = m_state.score > scoreBefore;
 
-    if (m_state.status != GameStatus::Won && m_config.maxMoves > 0) {
+    if (validMove && m_state.status != GameStatus::Won && m_config.maxMoves > 0) {
         --m_state.movesLeft;
         if (m_state.movesLeft == 0)
             m_state.status = GameStatus::Lost;

@@ -2,6 +2,19 @@
 #include "logic/game_logic.h"
 #include "logic/rules/stub_rules.h"
 
+// Правила для проверки ветки: невалидный ход (score не растёт)
+class NoScoreStubRules : public IGameRules {
+public:
+    void initBoard(Board& board, const GameConfig& config) override {
+        for (uint8_t r = 0; r < config.gridRows; ++r)
+            for (uint8_t c = 0; c < config.gridCols; ++c)
+                board.at(r, c) = GameCell(1);
+    }
+    void applySelection(GameState& state, const GameConfig&) override {
+        state.selection.clear(); // score не меняется
+    }
+};
+
 // Правила для проверки ветки: rules выставляют Won
 class WinningStubRules : public IGameRules {
 public:
@@ -118,6 +131,17 @@ TEST(GameLogicTest, ApplySelectionNoOpWhenSelectionEmpty) {
     gl.applySelection();
     EXPECT_EQ(gl.getState().movesLeft, 3);
     EXPECT_EQ(gl.getState().score, 0);
+}
+
+TEST(GameLogicTest, InvalidMoveDoesNotDecrementMovesLeft) {
+    GameConfig cfg;
+    cfg.gridRows = 2; cfg.gridCols = 2; cfg.maxMoves = 3;
+    GameLogic gl;
+    gl.init(cfg, std::make_unique<NoScoreStubRules>());
+    gl.select(0, 0);
+    gl.applySelection(); // rules не добавили score → ход не считается
+    EXPECT_EQ(gl.getState().movesLeft, 3);
+    EXPECT_EQ(gl.getState().score, 0u);
 }
 
 TEST(GameLogicTest, ApplySelectionPreservesWonStatus) {
