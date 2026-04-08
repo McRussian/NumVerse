@@ -109,9 +109,9 @@ NumVerse/
 ### Этап 6 — GameBoard (Qt)
 | | Задача |
 |-|--------|
-| ⬜ | Отрисовка сетки по `Board` |
-| ⬜ | Состояния ячеек |
-| ⬜ | Клики → сигнал `cellClicked` |
+| ✅ | Отрисовка сетки по `Board` |
+| ✅ | Состояния ячеек |
+| ✅ | Клики → сигнал `cellClicked` |
 | ⬜ | `setSelection`, `highlightCells` |
 
 ### Этап 7 — NumberChaosGame + GameWindow

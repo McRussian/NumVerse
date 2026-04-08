@@ -1,0 +1,68 @@
+#include "game_cell_widget.h"
+
+#include <QLabel>
+#include <QMouseEvent>
+#include <QPainter>
+#include <QStyle>
+#include <QStyleOption>
+#include <QVBoxLayout>
+
+GameCellWidget::GameCellWidget(int row, int col, QWidget* parent)
+    : QWidget(parent)
+    , m_row(row)
+    , m_col(col)
+    , m_label(new QLabel(this))
+{
+    auto* layout = new QVBoxLayout(this);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->addWidget(m_label, 0, Qt::AlignCenter);
+    setLayout(layout);
+
+    m_label->setAlignment(Qt::AlignCenter);
+    setState(CellState::Normal);
+}
+
+void GameCellWidget::setValue(uint16_t value)
+{
+    m_label->setText(value == 0 ? QString{} : QString::number(value));
+}
+
+void GameCellWidget::setState(CellState state)
+{
+    // Строка-свойство используется QSS: GameCellWidget[cellState="selected"] { ... }
+    const char* str = "normal";
+    switch (state) {
+        case CellState::Normal:      str = "normal";      break;
+        case CellState::Selected:    str = "selected";    break;
+        case CellState::Highlighted: str = "highlighted"; break;
+        case CellState::Locked:      str = "locked";      break;
+        case CellState::Empty:       str = "empty";       break;
+    }
+
+    setProperty("cellState", str);
+    style()->unpolish(this);
+    style()->polish(this);
+    update();
+}
+
+void GameCellWidget::setFontSize(int px)
+{
+    QFont f = m_label->font();
+    f.setPixelSize(px);
+    f.setBold(true);
+    m_label->setFont(f);
+}
+
+void GameCellWidget::paintEvent(QPaintEvent*)
+{
+    QStyleOption opt;
+    opt.initFrom(this);
+    QPainter p(this);
+    style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
+}
+
+void GameCellWidget::mousePressEvent(QMouseEvent* event)
+{
+    Q_UNUSED(event)
+    emit clicked(m_row, m_col);
+}
