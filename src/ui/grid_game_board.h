@@ -12,6 +12,7 @@ public:
     explicit GridGameBoard(QWidget* parent = nullptr);
 
     void updateBoard(const Board& board) override;
+    void highlightHint(const Selection& hint) override;
 
 protected:
     void paintEvent(QPaintEvent* event) override;

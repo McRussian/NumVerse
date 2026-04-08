@@ -24,8 +24,10 @@ public:
     void start();
     void selectCell(int row, int col);
     void applySelection();
+    void tick(uint32_t secs);
     void hint();
     void reset();
+    void surrender();
 
     const GameState& state() const;
 

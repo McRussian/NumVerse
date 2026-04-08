@@ -119,8 +119,8 @@ NumVerse/
 |-|--------|
 | ✅ | `AbstractGame` |
 | ✅ | `NumberChaosGame` |
-| ⬜ | `GameWindow` (компоновка) |
-| ⬜ | `GameWindow` таймеры + signal-slot |
+| ✅ | `GameWindow` (компоновка) |
+| ✅ | `GameWindow` таймеры + signal-slot |
 
 ### Этап 8 — UI-оболочка
 | | Задача |

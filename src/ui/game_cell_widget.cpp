@@ -63,6 +63,8 @@ void GameCellWidget::paintEvent(QPaintEvent*)
 
 void GameCellWidget::mousePressEvent(QMouseEvent* event)
 {
-    Q_UNUSED(event)
-    emit clicked(m_row, m_col);
+    if (event->button() == Qt::LeftButton)
+        emit clicked(m_row, m_col);
+    else if (event->button() == Qt::RightButton)
+        emit rightClicked(m_row, m_col);
 }

@@ -16,6 +16,7 @@ public:
 
 signals:
     void clicked(int row, int col);
+    void rightClicked(int row, int col);
 
 protected:
     void paintEvent(QPaintEvent* event) override;

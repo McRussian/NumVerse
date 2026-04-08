@@ -43,6 +43,12 @@ void GameLogic::applySelection() {
     }
 }
 
+void GameLogic::forfeit() {
+    if (m_state.status != GameStatus::Playing)
+        return;
+    m_state.status = GameStatus::Lost;
+}
+
 void GameLogic::tick(uint32_t secs) {
     if (m_state.status != GameStatus::Playing)
         return;

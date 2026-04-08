@@ -29,6 +29,9 @@ public:
     // Перезапустить сессию с теми же config и rules (без пересоздания).
     void reset();
 
+    // Завершить сессию поражением (игрок сдался).
+    void forfeit();
+
     const GameState& getState() const;
 
     GameResult buildResult(const std::string& playerName) const;

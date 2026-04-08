@@ -24,11 +24,23 @@ void AbstractGame::applySelection()
     emitStateSignals();
 }
 
+void AbstractGame::tick(uint32_t secs)
+{
+    m_logic.tick(secs);
+    emit stateChanged(m_logic.getState());
+}
+
 void AbstractGame::hint()
 {
     Selection h = m_logic.getHint();
     if (!h.empty())
         emit hintReady(h);
+}
+
+void AbstractGame::surrender()
+{
+    m_logic.forfeit();
+    emitStateSignals();
 }
 
 void AbstractGame::reset()

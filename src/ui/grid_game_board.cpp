@@ -2,6 +2,8 @@
 #include "game_cell_widget.h"
 #include "theme.h"
 #include "logic/data/board.h"
+#include "logic/data/cell_state.h"
+#include "logic/data/selection.h"
 
 #include <QGridLayout>
 #include <QPainter>
@@ -30,6 +32,13 @@ void GridGameBoard::updateBoard(const Board& board)
             m_cells[r][c]->setValue(cell.value());
             m_cells[r][c]->setState(cell.state());
         }
+}
+
+void GridGameBoard::highlightHint(const Selection& hint)
+{
+    for (auto [row, col] : hint.cells())
+        if (row < m_rows && col < m_cols)
+            m_cells[row][col]->setState(CellState::Highlighted);
 }
 
 void GridGameBoard::paintEvent(QPaintEvent*)
@@ -61,7 +70,8 @@ void GridGameBoard::rebuildGrid(const Board& board)
     for (int r = 0; r < m_rows; ++r)
         for (int c = 0; c < m_cols; ++c) {
             auto* cell = new GameCellWidget(r, c, this);
-            connect(cell, &GameCellWidget::clicked, this, &GridGameBoard::cellClicked);
+            connect(cell, &GameCellWidget::clicked,      this, &GridGameBoard::cellClicked);
+            connect(cell, &GameCellWidget::rightClicked, this, &GridGameBoard::cellRightClicked);
             m_layout->addWidget(cell, r, c);
             m_cells[r][c] = cell;
         }
