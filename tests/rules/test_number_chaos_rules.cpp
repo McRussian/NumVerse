@@ -63,30 +63,6 @@ TEST(NumberChaosRulesTest, GeometricNonIntegerRatioInvalid) {
     EXPECT_FALSE(NumberChaosRules::isValidSequence(V{4, 6, 9}));
 }
 
-// --- Фибоначчи ---
-
-TEST(NumberChaosRulesTest, FibonacciStandard) {
-    EXPECT_TRUE(NumberChaosRules::isValidSequence(V{1, 2, 3, 5, 8}));
-}
-
-TEST(NumberChaosRulesTest, FibonacciSubsequence) {
-    EXPECT_TRUE(NumberChaosRules::isValidSequence(V{3, 5, 8}));
-}
-
-TEST(NumberChaosRulesTest, FibonacciDoubleOneStart) {
-    EXPECT_TRUE(NumberChaosRules::isValidSequence(V{1, 1, 2, 3}));
-}
-
-TEST(NumberChaosRulesTest, FibonacciDescendingInvalid) {
-    // {8,5,3}: убывающая — не разрешена; арифм.: diff -3,-2 ✗; прочее не подходит
-    EXPECT_FALSE(NumberChaosRules::isValidSequence(V{8, 5, 3}));
-}
-
-TEST(NumberChaosRulesTest, FibonacciBrokenInvalid) {
-    // 1+2=3 ≠ 5; не арифм., не геом., не квадраты, не факториалы
-    EXPECT_FALSE(NumberChaosRules::isValidSequence(V{1, 2, 5}));
-}
-
 // --- Квадраты ---
 
 TEST(NumberChaosRulesTest, SquaresAscending) {

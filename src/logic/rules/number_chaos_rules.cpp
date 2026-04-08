@@ -50,7 +50,6 @@ bool NumberChaosRules::isValidSequence(const std::vector<uint16_t>& v) {
     if (v.size() < 3) return false;
     return isArithmetic(v)  ||
            isGeometric(v)   ||
-           isFibonacci(v)   ||
            isSquares(v)     ||
            isAllEven(v)     ||
            isAllOdd(v)      ||
