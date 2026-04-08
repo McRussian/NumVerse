@@ -9,6 +9,7 @@ namespace Theme {
 inline const QColor CellNormal     {220, 220, 220};
 inline const QColor CellSelected   { 70, 130, 200};
 inline const QColor CellHighlighted{255, 220,  80};
+inline const QColor CellHinted     {120, 200, 120};
 inline const QColor CellLocked     {160, 160, 160};
 inline const QColor CellEmpty      {245, 245, 245};
 
@@ -16,6 +17,7 @@ inline const QColor CellEmpty      {245, 245, 245};
 inline const QColor TextNormal     { 30,  30,  30};
 inline const QColor TextSelected   {255, 255, 255};
 inline const QColor TextHighlighted{ 30,  30,  30};
+inline const QColor TextHinted     { 30,  30,  30};
 inline const QColor TextLocked     {100, 100, 100};
 
 // Panel
@@ -62,6 +64,7 @@ inline QString defaultStyleSheet()
         "GameCellWidget[cellState='normal']      { background-color: %1; color: %2; }"
         "GameCellWidget[cellState='selected']    { background-color: %3; color: %4; }"
         "GameCellWidget[cellState='highlighted'] { background-color: %5; color: %6; }"
+        "GameCellWidget[cellState='hinted']      { background-color: %13; color: %14; }"
         "GameCellWidget[cellState='locked']      { background-color: %7; color: %8; }"
         "GameCellWidget[cellState='empty']       { background-color: %9; color: %2; }"
     }
@@ -71,7 +74,8 @@ inline QString defaultStyleSheet()
          CellLocked.name(),      TextLocked.name(),
          CellEmpty.name())
     .arg(GridBackground.name())
-    .arg(PanelBackground.name(), PanelText.name());
+    .arg(PanelBackground.name(), PanelText.name())
+    .arg(CellHinted.name(), TextHinted.name());
 }
 
 } // namespace Theme

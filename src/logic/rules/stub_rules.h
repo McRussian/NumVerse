@@ -9,5 +9,5 @@ class StubRules : public IGameRules {
 public:
     void initBoard(Board& board, const GameConfig& config) override;
     void applySelection(GameState& state, const GameConfig& config) override;
-    Selection getHint(const Board& board) const override;
+    std::vector<Selection> getHint(const Board& board) const override;
 };

@@ -12,6 +12,6 @@ void StubRules::applySelection(GameState& state, const GameConfig&) {
     state.selection.clear();
 }
 
-Selection StubRules::getHint(const Board&) const {
+std::vector<Selection> StubRules::getHint(const Board&) const {
     return {};
 }

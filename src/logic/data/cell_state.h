@@ -8,6 +8,7 @@ enum class CellState : uint8_t {
     Normal,
     Selected,
     Highlighted,
+    Hinted,
     Locked,
     Empty
 };

@@ -3,6 +3,7 @@
 #include "logic/data/board.h"
 #include "logic/data/game_config.h"
 #include "logic/data/game_state.h"
+#include <vector>
 
 // Интерфейс игровых правил. Каждая игра предоставляет свою реализацию.
 // GameLogic владеет экземпляром и делегирует ему заполнение поля и обработку ходов.
@@ -17,8 +18,8 @@ public:
     // Обязан очистить state.selection перед возвратом.
     virtual void applySelection(GameState& state, const GameConfig& config) = 0;
 
-    // Найти любую валидную последовательность на поле и вернуть её как Selection.
-    // Ячейки в Selection идут в порядке чтения (row-major).
-    // Возвращает пустой Selection если валидных ходов нет.
-    virtual Selection getHint(const Board& board) const = 0;
+    // Найти все валидные последовательности на поле.
+    // Ячейки в каждой Selection идут в порядке чтения (row-major).
+    // Возвращает пустой вектор если валидных ходов нет.
+    virtual std::vector<Selection> getHint(const Board& board) const = 0;
 };

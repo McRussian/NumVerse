@@ -329,10 +329,10 @@ TEST(NumberChaosRulesTest, HintFindsSequence) {
     board.at(0, 0) = GameCell(2);
     board.at(0, 1) = GameCell(5);
     board.at(0, 2) = GameCell(8);
-    auto sel = rules.getHint(board);
-    ASSERT_FALSE(sel.empty());
+    auto hints = rules.getHint(board);
+    ASSERT_FALSE(hints.empty());
     std::vector<uint16_t> values;
-    for (auto [r, c] : sel.cells())
+    for (auto [r, c] : hints[0].cells())
         values.push_back(board.at(r, c).value());
     EXPECT_TRUE(NumberChaosRules::isValidSequence(values));
 }
@@ -347,10 +347,10 @@ TEST(NumberChaosRulesTest, HintFindsInterleavedSequence) {
     board.at(0, 2) = GameCell(5);
     board.at(0, 3) = GameCell(3);
     board.at(0, 4) = GameCell(8);
-    auto sel = rules.getHint(board);
-    ASSERT_FALSE(sel.empty());
+    auto hints = rules.getHint(board);
+    ASSERT_FALSE(hints.empty());
     std::vector<uint16_t> values;
-    for (auto [r, c] : sel.cells())
+    for (auto [r, c] : hints[0].cells())
         values.push_back(board.at(r, c).value());
     EXPECT_TRUE(NumberChaosRules::isValidSequence(values));
 }
@@ -363,8 +363,9 @@ TEST(NumberChaosRulesTest, HintPrefersShorterSequence) {
     board.at(0, 1) = GameCell(5);
     board.at(0, 2) = GameCell(8);
     board.at(0, 3) = GameCell(11);
-    auto sel = rules.getHint(board);
-    EXPECT_EQ(sel.size(), 3u);
+    auto hints = rules.getHint(board);
+    ASSERT_FALSE(hints.empty());
+    EXPECT_EQ(hints[0].size(), 3u);
 }
 
 // --- initBoard ---

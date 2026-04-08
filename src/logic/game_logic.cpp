@@ -62,7 +62,7 @@ const GameState& GameLogic::getState() const {
     return m_state;
 }
 
-Selection GameLogic::getHint() const {
+std::vector<Selection> GameLogic::getHint() const {
     return m_rules->getHint(m_state.board);
 }
 

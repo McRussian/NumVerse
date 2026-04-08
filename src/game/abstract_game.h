@@ -41,9 +41,12 @@ protected:
     virtual std::unique_ptr<IGameRules> createRules() const = 0;
 
 private:
-    std::string m_playerName;
-    GameConfig  m_config;
-    GameLogic   m_logic;
+    std::string            m_playerName;
+    GameConfig             m_config;
+    GameLogic              m_logic;
+    std::vector<Selection> m_hints;
+    size_t                 m_hintIndex = 0;
 
     void emitStateSignals();
+    void resetHints();
 };

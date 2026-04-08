@@ -173,7 +173,7 @@ static bool nextCombination(std::vector<size_t>& idx, size_t n) {
     return true;
 }
 
-Selection NumberChaosRules::getHint(const Board& board) const {
+std::vector<Selection> NumberChaosRules::getHint(const Board& board) const {
     std::vector<std::pair<uint8_t, uint8_t>> cells;
     for (uint8_t r = 0; r < board.rows(); ++r)
         for (uint8_t c = 0; c < board.cols(); ++c)
@@ -183,6 +183,7 @@ Selection NumberChaosRules::getHint(const Board& board) const {
     size_t n = cells.size();
     if (n < 3) return {};
 
+    std::vector<Selection> results;
     size_t maxSize = std::min(n, size_t{5});
     for (size_t size = 3; size <= maxSize; ++size) {
         std::vector<size_t> idx(size);
@@ -196,11 +197,11 @@ Selection NumberChaosRules::getHint(const Board& board) const {
                 Selection sel;
                 for (size_t i : idx)
                     sel.add(cells[i].first, cells[i].second);
-                return sel;
+                results.push_back(sel);
             }
         } while (nextCombination(idx, n));
     }
-    return {};
+    return results;
 }
 
 bool NumberChaosRules::isBoardCleared(const Board& board) {

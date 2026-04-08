@@ -35,6 +35,7 @@ void GameCellWidget::setState(CellState state)
         case CellState::Normal:      str = "normal";      break;
         case CellState::Selected:    str = "selected";    break;
         case CellState::Highlighted: str = "highlighted"; break;
+        case CellState::Hinted:      str = "hinted";      break;
         case CellState::Locked:      str = "locked";      break;
         case CellState::Empty:       str = "empty";       break;
     }

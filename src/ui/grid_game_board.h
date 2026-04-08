@@ -19,8 +19,9 @@ protected:
     void resizeEvent(QResizeEvent* event) override;
 
 private:
-    QGridLayout*                            m_layout;
+    QGridLayout*                              m_layout;
     std::vector<std::vector<GameCellWidget*>> m_cells;
+    std::vector<std::pair<int,int>>           m_hintCells;
     int m_rows = 0;
     int m_cols = 0;
 

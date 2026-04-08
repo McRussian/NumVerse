@@ -36,9 +36,17 @@ void GridGameBoard::updateBoard(const Board& board)
 
 void GridGameBoard::highlightHint(const Selection& hint)
 {
-    for (auto [row, col] : hint.cells())
+    for (auto [row, col] : m_hintCells)
         if (row < m_rows && col < m_cols)
-            m_cells[row][col]->setState(CellState::Highlighted);
+            m_cells[row][col]->setState(CellState::Normal);
+    m_hintCells.clear();
+
+    for (auto [row, col] : hint.cells()) {
+        if (row < m_rows && col < m_cols) {
+            m_cells[row][col]->setState(CellState::Hinted);
+            m_hintCells.push_back({row, col});
+        }
+    }
 }
 
 void GridGameBoard::paintEvent(QPaintEvent*)
@@ -62,6 +70,7 @@ void GridGameBoard::rebuildGrid(const Board& board)
         delete item;
     }
     m_cells.clear();
+    m_hintCells.clear();
 
     m_rows = board.rows();
     m_cols = board.cols();

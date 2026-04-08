@@ -25,7 +25,7 @@ public:
     // Ищет кратчайшую валидную последовательность среди непустых ячеек.
     // Перебирает комбинации в порядке чтения (row-major) — без перестановок,
     // т.к. генерация гарантирует что ячейки последовательности идут в этом порядке.
-    Selection getHint(const Board& board) const override;
+    std::vector<Selection> getHint(const Board& board) const override;
 
 private:
     static bool isArithmetic(const std::vector<uint16_t>& v);

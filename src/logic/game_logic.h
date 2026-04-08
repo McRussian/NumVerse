@@ -36,7 +36,7 @@ public:
 
     GameResult buildResult(const std::string& playerName) const;
 
-    Selection getHint() const;
+    std::vector<Selection> getHint() const;
 
 private:
     GameConfig m_config;

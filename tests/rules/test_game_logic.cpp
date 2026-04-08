@@ -13,7 +13,7 @@ public:
     void applySelection(GameState& state, const GameConfig&) override {
         state.selection.clear(); // score не меняется
     }
-    Selection getHint(const Board&) const override { return {}; }
+    std::vector<Selection> getHint(const Board&) const override { return {}; }
 };
 
 // Правила для проверки ветки: rules выставляют Won
@@ -28,7 +28,7 @@ public:
         state.status = GameStatus::Won;
         state.selection.clear();
     }
-    Selection getHint(const Board&) const override { return {}; }
+    std::vector<Selection> getHint(const Board&) const override { return {}; }
 };
 
 static GameLogic makeGame(uint8_t rows = 3, uint8_t cols = 3,

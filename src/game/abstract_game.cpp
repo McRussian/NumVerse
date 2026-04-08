@@ -9,6 +9,7 @@ AbstractGame::AbstractGame(std::string playerName, GameConfig config, QObject* p
 void AbstractGame::start()
 {
     m_logic.init(m_config, createRules());
+    resetHints();
     emitStateSignals();
 }
 
@@ -21,6 +22,7 @@ void AbstractGame::selectCell(int row, int col)
 void AbstractGame::applySelection()
 {
     m_logic.applySelection();
+    resetHints();
     emitStateSignals();
 }
 
@@ -32,9 +34,14 @@ void AbstractGame::tick(uint32_t secs)
 
 void AbstractGame::hint()
 {
-    Selection h = m_logic.getHint();
-    if (!h.empty())
-        emit hintReady(h);
+    if (m_hints.empty()) {
+        m_hints = m_logic.getHint();
+        m_hintIndex = 0;
+    }
+    if (m_hints.empty())
+        return;
+    emit hintReady(m_hints[m_hintIndex]);
+    m_hintIndex = (m_hintIndex + 1) % m_hints.size();
 }
 
 void AbstractGame::surrender()
@@ -46,6 +53,7 @@ void AbstractGame::surrender()
 void AbstractGame::reset()
 {
     m_logic.reset();
+    resetHints();
     emitStateSignals();
 }
 
@@ -62,4 +70,10 @@ void AbstractGame::emitStateSignals()
 
     if (s.status == GameStatus::Won || s.status == GameStatus::Lost)
         emit gameOver(m_logic.buildResult(m_playerName));
+}
+
+void AbstractGame::resetHints()
+{
+    m_hints.clear();
+    m_hintIndex = 0;
 }
