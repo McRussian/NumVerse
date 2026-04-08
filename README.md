@@ -117,8 +117,8 @@ NumVerse/
 ### Этап 7 — NumberChaosGame + GameWindow
 | | Задача |
 |-|--------|
-| ⬜ | `AbstractGame` |
-| ⬜ | `NumberChaosGame` |
+| ✅ | `AbstractGame` |
+| ✅ | `NumberChaosGame` |
 | ⬜ | `GameWindow` (компоновка) |
 | ⬜ | `GameWindow` таймеры + signal-slot |
 
