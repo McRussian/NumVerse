@@ -17,11 +17,11 @@ TEST(ScoreBoardByScore, EmptyBoard)
     EXPECT_FALSE(sb.best(1).has_value());
 }
 
-TEST(ScoreBoardByScore, LostResultIgnored)
+TEST(ScoreBoardByScore, LostResultRecorded)
 {
     ScoreBoard sb;
     sb.add(1, makeResult(500, 30, false));
-    EXPECT_TRUE(sb.top(1).empty());
+    EXPECT_EQ(sb.top(1).size(), 1u);
 }
 
 TEST(ScoreBoardByScore, SortedByScoreDesc)
@@ -80,7 +80,7 @@ TEST(ScoreBoardByScore, AddReturnsTrue)
     EXPECT_TRUE(sb.add(1, makeResult(100, 60, true)));
     EXPECT_TRUE(sb.add(1, makeResult(150, 60, true)));   // вытесняет 100
     EXPECT_FALSE(sb.add(1, makeResult(50, 60, true)));   // хуже худшего
-    EXPECT_FALSE(sb.add(1, makeResult(100, 60, false))); // проигрыш
+    EXPECT_FALSE(sb.add(1, makeResult(50, 60, false)));  // хуже худшего
 }
 
 TEST(ScoreBoardByScore, Best)

@@ -3,6 +3,7 @@
 #include "game_window.h"
 #include "grid_game_board.h"
 #include "game_catalog.h"
+#include "high_score_dialog.h"
 #include "game/abstract_game.h"
 
 #include <QAction>
@@ -87,9 +88,10 @@ MainWindow::MainWindow(QWidget* parent)
     connect(m_surrenderAction, &QAction::triggered, this, &MainWindow::onSurrenderTriggered);
 
     // Menu signals
-    connect(m_menu, &MenuWidget::gameSelected,  this, &MainWindow::startGame);
-    connect(m_menu, &MenuWidget::quitRequested, qApp, &QApplication::quit);
-    connect(m_menu, &MenuWidget::playerChanged, this, &MainWindow::onPlayerChanged);
+    connect(m_menu, &MenuWidget::gameSelected,    this, &MainWindow::startGame);
+    connect(m_menu, &MenuWidget::quitRequested,  qApp, &QApplication::quit);
+    connect(m_menu, &MenuWidget::playerChanged,  this, &MainWindow::onPlayerChanged);
+    connect(m_menu, &MenuWidget::recordsRequested, this, &MainWindow::showHighScores);
 
     // Difficulty combo
     connect(m_diffBox, &QComboBox::currentIndexChanged, this, [this](int idx) {
@@ -134,6 +136,7 @@ void MainWindow::startGame(int gameId)
     // Create new game
     m_currentGame     = it->createGame(m_menu->currentPlayerName().toStdString(), config);
     m_currentGameId   = gameId;
+    m_currentGameName = it->name;
     m_currentFeatures = it->features;
     m_applyAction->setVisible(hasFeature(it->features, GameFeature::ApplySelection));
     auto* board     = new GridGameBoard;
@@ -235,23 +238,40 @@ void MainWindow::onGameOver(const GameResult& result)
 {
     m_gameTimer->stop();
 
+    const uint8_t lvl = static_cast<uint8_t>(currentDifficulty());
+    const bool r1 = m_scoreByScore.add(lvl, result);
+    const bool r2 = m_scoreByTime.add(lvl, result);
+    const bool newRecord = r1 || r2;
+
     QString msg = result.won
-        ? QString("Победа!\nСчёт: %1   Время: %2")
-              .arg(result.score).arg(formatTime(result.timeSecs))
+        ? QString("Победа!\nСчёт: %1   Время: %2%3")
+              .arg(result.score)
+              .arg(formatTime(result.timeSecs))
+              .arg(newRecord ? "\n\nНовый рекорд!" : "")
         : QString("Игра окончена.\nСчёт: %1   Время: %2")
               .arg(result.score).arg(formatTime(result.timeSecs));
 
     QMessageBox box(this);
-    box.setWindowTitle("Конец игры");
+    box.setWindowTitle(result.won ? "Победа!" : "Конец игры");
     box.setText(msg);
     box.addButton("Заново",  QMessageBox::AcceptRole);
     QAbstractButton* menuBtn = box.addButton("В меню", QMessageBox::RejectRole);
     box.exec();
 
+    if (newRecord)
+        showHighScores();
+
     if (box.clickedButton() == menuBtn)
         showMenu();
     else
         onNewGameTriggered();
+}
+
+void MainWindow::showHighScores()
+{
+    const QString name = m_currentGameName.isEmpty() ? "NumVerse" : m_currentGameName;
+    HighScoreDialog dlg(m_scoreByScore, m_scoreByTime, name, this);
+    dlg.exec();
 }
 
 void MainWindow::updateGameStatus(const GameState& state)

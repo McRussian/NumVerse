@@ -49,12 +49,18 @@ MenuWidget::MenuWidget(QWidget* parent)
         connect(card, &GameCardWidget::clicked, this, &MenuWidget::gameSelected);
     }
 
-    auto* quitBtn = new QPushButton("Выход", this);
+    auto* recordsBtn = new QPushButton("Рекорды", this);
+    auto* quitBtn    = new QPushButton("Выход",   this);
+    recordsBtn->setObjectName("menuButton");
     quitBtn->setObjectName("menuButton");
+    recordsBtn->setFixedHeight(36);
     quitBtn->setFixedHeight(36);
+    recordsBtn->setFixedWidth(120);
     quitBtn->setFixedWidth(120);
     auto* quitRow = new QHBoxLayout;
     quitRow->addStretch();
+    quitRow->addWidget(recordsBtn);
+    quitRow->addSpacing(12);
     quitRow->addWidget(quitBtn);
     quitRow->addStretch();
 
@@ -70,7 +76,8 @@ MenuWidget::MenuWidget(QWidget* parent)
     layout->addSpacing(20);
     layout->setContentsMargins(40, 30, 40, 20);
 
-    connect(quitBtn, &QPushButton::clicked, this, &MenuWidget::quitRequested);
+    connect(recordsBtn, &QPushButton::clicked, this, &MenuWidget::recordsRequested);
+    connect(quitBtn,    &QPushButton::clicked, this, &MenuWidget::quitRequested);
 
     // Set initial value without triggering the signal
     QSettings s;

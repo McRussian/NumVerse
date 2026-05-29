@@ -20,7 +20,6 @@ bool ScoreBoard::isBetter(const GameResult& a, const GameResult& b) const
 
 bool ScoreBoard::add(uint8_t level, const GameResult& result)
 {
-    if (!result.won) return false;
     auto& list = m_records[level];
     if (list.size() >= m_maxRecords && !isBetter(result, list.back()))
         return false;

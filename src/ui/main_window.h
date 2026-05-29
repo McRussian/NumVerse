@@ -6,6 +6,7 @@
 #include "logic/data/difficulty.h"
 #include "logic/data/game_result.h"
 #include "logic/data/game_state.h"
+#include "logic/score_board.h"
 
 class QAction;
 class QComboBox;
@@ -48,6 +49,11 @@ private:
     QLabel*    m_movesLabel;
     QLabel*    m_timeLabel;
 
+    // Scoreboards (per game type, keyed by difficulty as level)
+    ScoreBoard m_scoreByScore{RankingMode::ByScore};
+    ScoreBoard m_scoreByTime {RankingMode::ByTime};
+    QString    m_currentGameName;
+
     // Timer
     QTimer*   m_gameTimer;
     uint32_t  m_elapsedSecs = 0;
@@ -69,6 +75,7 @@ private:
     void connectGame(AbstractGame* game);
     void disconnectGame();
     void setGameControlsVisible(bool visible);
+    void showHighScores();
 
     static QString formatTime(uint32_t secs);
 };

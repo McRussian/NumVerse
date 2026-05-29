@@ -14,6 +14,7 @@ public:
 signals:
     void gameSelected(int gameId);
     void playerChanged(const QString& name);
+    void recordsRequested();
     void quitRequested();
 
 protected:
