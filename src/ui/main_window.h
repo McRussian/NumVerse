@@ -34,6 +34,7 @@ private:
 
     // Toolbar
     QToolBar* m_toolbar;
+    QAction*  m_applyAction;
     QAction*  m_hintAction;
     QAction*  m_surrenderAction;
     QAction*  m_newGameAction;
@@ -53,6 +54,7 @@ private:
     void showMenu();
     void onPlayerChanged(const QString& name);
 
+    void onApplyTriggered();
     void onHintTriggered();
     void onSurrenderTriggered();
     void onNewGameTriggered();

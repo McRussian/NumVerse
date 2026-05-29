@@ -37,9 +37,11 @@ MainWindow::MainWindow(QWidget* parent)
     m_toolbar = addToolBar("Игра");
     m_toolbar->setMovable(false);
     m_toolbar->setFloatable(false);
-    m_newGameAction  = m_toolbar->addAction("Новая игра");
+    m_newGameAction   = m_toolbar->addAction("Новая игра");
     m_toolbar->addSeparator();
-    m_hintAction     = m_toolbar->addAction("Подсказка");
+    m_applyAction     = m_toolbar->addAction("Применить");
+    m_hintAction      = m_toolbar->addAction("Подсказка");
+    m_toolbar->addSeparator();
     m_surrenderAction = m_toolbar->addAction("Сдаться");
     m_toolbar->hide();
 
@@ -72,6 +74,7 @@ MainWindow::MainWindow(QWidget* parent)
 
     // Toolbar actions
     connect(m_newGameAction,   &QAction::triggered, this, &MainWindow::onNewGameTriggered);
+    connect(m_applyAction,     &QAction::triggered, this, &MainWindow::onApplyTriggered);
     connect(m_hintAction,      &QAction::triggered, this, &MainWindow::onHintTriggered);
     connect(m_surrenderAction, &QAction::triggered, this, &MainWindow::onSurrenderTriggered);
 
@@ -178,6 +181,12 @@ void MainWindow::setGameControlsVisible(bool visible)
     m_scoreLabel->setVisible(visible);
     m_movesLabel->setVisible(visible);
     m_timeLabel->setVisible(visible);
+}
+
+void MainWindow::onApplyTriggered()
+{
+    if (m_currentGame)
+        m_currentGame->applySelection();
 }
 
 void MainWindow::onHintTriggered()
