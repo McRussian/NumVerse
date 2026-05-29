@@ -18,7 +18,7 @@ GridGameBoard::GridGameBoard(QWidget* parent)
     m_layout->setSpacing(Theme::CellSpacing);
     m_layout->setContentsMargins(Theme::GridPadding, Theme::GridPadding,
                                  Theme::GridPadding, Theme::GridPadding);
-    m_layout->setAlignment(Qt::AlignCenter);
+    m_layout->setAlignment(Qt::AlignTop | Qt::AlignLeft);
     setLayout(m_layout);
 }
 
