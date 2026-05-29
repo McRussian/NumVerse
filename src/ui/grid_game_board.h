@@ -19,13 +19,15 @@ public:
 
 protected:
     void paintEvent(QPaintEvent* event) override;
+    void resizeEvent(QResizeEvent* event) override;
 
 private:
     QGridLayout*                              m_layout;
     std::vector<std::vector<GameCellWidget*>> m_cells;
     std::vector<std::pair<int,int>>           m_hintCells;
-    int m_rows = 0;
-    int m_cols = 0;
+    int m_rows     = 0;
+    int m_cols     = 0;
+    int m_cellSize = 0; // locked on first resize, 0 = not yet calculated
 
     void rebuildGrid(const Board& board);
     void updateCellSizes();

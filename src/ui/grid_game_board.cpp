@@ -18,6 +18,7 @@ GridGameBoard::GridGameBoard(QWidget* parent)
     m_layout->setSpacing(Theme::CellSpacing);
     m_layout->setContentsMargins(Theme::GridPadding, Theme::GridPadding,
                                  Theme::GridPadding, Theme::GridPadding);
+    m_layout->setAlignment(Qt::AlignCenter);
     setLayout(m_layout);
 }
 
@@ -61,6 +62,22 @@ void GridGameBoard::paintEvent(QPaintEvent*)
     style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
 }
 
+void GridGameBoard::resizeEvent(QResizeEvent* event)
+{
+    AbstractGameBoard::resizeEvent(event);
+    // Lock cell size on first valid resize — never change it afterwards
+    if (m_cellSize == 0 && m_rows > 0 && m_cols > 0
+        && width() > 0 && height() > 0)
+    {
+        int spacingW = Theme::CellSpacing * (m_cols - 1) + Theme::GridPadding * 2;
+        int spacingH = Theme::CellSpacing * (m_rows - 1) + Theme::GridPadding * 2;
+        int cellW    = (width()  - spacingW) / m_cols;
+        int cellH    = (height() - spacingH) / m_rows;
+        m_cellSize   = std::max(Theme::CellMinSize, std::min(cellW, cellH));
+        updateCellSizes();
+        updateGeometry();
+    }
+}
 
 void GridGameBoard::rebuildGrid(const Board& board)
 {
@@ -87,19 +104,13 @@ void GridGameBoard::rebuildGrid(const Board& board)
     updateCellSizes();
 }
 
-static QSize contentSize(int rows, int cols)
-{
-    int w = cols * (Theme::CellMinSize + Theme::CellSpacing)
-            - Theme::CellSpacing + 2 * Theme::GridPadding;
-    int h = rows * (Theme::CellMinSize + Theme::CellSpacing)
-            - Theme::CellSpacing + 2 * Theme::GridPadding;
-    return QSize(w, h);
-}
-
 QSize GridGameBoard::sizeHint() const
 {
     if (m_rows == 0 || m_cols == 0) return QWidget::sizeHint();
-    return contentSize(m_rows, m_cols);
+    int cs = m_cellSize > 0 ? m_cellSize : Theme::CellMinSize;
+    int w  = m_cols * (cs + Theme::CellSpacing) - Theme::CellSpacing + 2 * Theme::GridPadding;
+    int h  = m_rows * (cs + Theme::CellSpacing) - Theme::CellSpacing + 2 * Theme::GridPadding;
+    return QSize(w, h);
 }
 
 QSize GridGameBoard::minimumSizeHint() const
@@ -111,12 +122,11 @@ void GridGameBoard::updateCellSizes()
 {
     if (m_rows == 0 || m_cols == 0) return;
 
-    const int cellSize = Theme::CellMinSize;
-    const int fontSize = std::max(10, cellSize / 3);
+    int cs       = m_cellSize > 0 ? m_cellSize : Theme::CellMinSize;
+    int fontSize = std::max(10, cs / 3);
     for (auto& row : m_cells)
         for (auto* cell : row) {
-            cell->setFixedSize(cellSize, cellSize);
+            cell->setFixedSize(cs, cs);
             cell->setFontSize(fontSize);
         }
-    updateGeometry();
 }
