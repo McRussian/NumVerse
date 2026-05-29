@@ -15,6 +15,7 @@ void GameLogic::reset() {
     m_state.movesLeft = m_config.maxMoves;
     m_rules->initBoard(m_state.board, m_config);
     m_state.status = GameStatus::Playing;
+    m_history.clear();
 }
 
 void GameLogic::select(uint8_t row, uint8_t col) {
@@ -41,15 +42,42 @@ void GameLogic::applySelection() {
     if (m_state.selection.empty())
         return;
 
+    // Snapshot before applying — saved only if move is valid
+    Snapshot snap{m_state.board, m_state.score, m_state.movesLeft};
+
     uint32_t scoreBefore = m_state.score;
     m_rules->applySelection(m_state, m_config);
     bool validMove = m_state.score > scoreBefore;
 
-    if (validMove && m_state.status != GameStatus::Won && m_config.maxMoves > 0) {
-        --m_state.movesLeft;
-        if (m_state.movesLeft == 0)
-            m_state.status = GameStatus::Lost;
+    if (validMove) {
+        if (m_config.historySize > 0) {
+            if (m_history.size() >= m_config.historySize)
+                m_history.pop_front();
+            m_history.push_back(std::move(snap));
+        }
+
+        if (m_state.status != GameStatus::Won && m_config.maxMoves > 0) {
+            --m_state.movesLeft;
+            if (m_state.movesLeft == 0)
+                m_state.status = GameStatus::Lost;
+        }
     }
+}
+
+void GameLogic::undo() {
+    if (m_history.empty() || m_state.status != GameStatus::Playing)
+        return;
+
+    const auto& snap  = m_history.back();
+    m_state.board     = snap.board;
+    m_state.score     = snap.score;
+    m_state.movesLeft = snap.movesLeft;
+    m_state.selection.clear();
+    m_history.pop_back();
+}
+
+bool GameLogic::canUndo() const {
+    return !m_history.empty();
 }
 
 void GameLogic::shuffle() {

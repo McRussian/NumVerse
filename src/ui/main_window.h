@@ -40,6 +40,7 @@ private:
     QAction*  m_shuffleAction;
     QAction*  m_surrenderAction;
     QAction*  m_newGameAction;
+    QAction*  m_undoAction;
 
     // Status bar
     QComboBox* m_diffBox;
@@ -57,6 +58,7 @@ private:
     void onPlayerChanged(const QString& name);
 
     void onApplyTriggered();
+    void onUndoTriggered();
     void onHintTriggered();
     void onShuffleTriggered();
     void onSurrenderTriggered();

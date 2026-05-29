@@ -38,6 +38,7 @@ MainWindow::MainWindow(QWidget* parent)
     m_toolbar->setMovable(false);
     m_toolbar->setFloatable(false);
     m_newGameAction   = m_toolbar->addAction("Новая игра");
+    m_undoAction      = m_toolbar->addAction("Отменить");
     m_toolbar->addSeparator();
     m_hintAction      = m_toolbar->addAction("Подсказка");
     m_shuffleAction   = m_toolbar->addAction("Перемешать");
@@ -79,6 +80,7 @@ MainWindow::MainWindow(QWidget* parent)
 
     // Toolbar actions
     connect(m_newGameAction,   &QAction::triggered, this, &MainWindow::onNewGameTriggered);
+    connect(m_undoAction,      &QAction::triggered, this, &MainWindow::onUndoTriggered);
     connect(m_applyAction,     &QAction::triggered, this, &MainWindow::onApplyTriggered);
     connect(m_hintAction,      &QAction::triggered, this, &MainWindow::onHintTriggered);
     connect(m_shuffleAction,   &QAction::triggered, this, &MainWindow::onShuffleTriggered);
@@ -189,6 +191,12 @@ void MainWindow::setGameControlsVisible(bool visible)
     m_scoreLabel->setVisible(visible);
     m_movesLabel->setVisible(visible);
     m_timeLabel->setVisible(visible);
+}
+
+void MainWindow::onUndoTriggered()
+{
+    if (m_currentGame)
+        m_currentGame->undo();
 }
 
 void MainWindow::onApplyTriggered()

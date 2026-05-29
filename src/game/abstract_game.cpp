@@ -46,6 +46,15 @@ void AbstractGame::hint()
     m_hintIndex = (m_hintIndex + 1) % m_hints.size();
 }
 
+void AbstractGame::undo()
+{
+    m_logic.undo();
+    resetHints();
+    const GameState& s = m_logic.getState();
+    emit boardChanged(s.board);
+    emit stateChanged(s);
+}
+
 void AbstractGame::shuffle()
 {
     m_logic.shuffle();

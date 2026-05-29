@@ -28,6 +28,7 @@ public:
     void hint();
     void reset();
     void shuffle();
+    void undo();
     void surrender();
 
     const GameState& state() const;
