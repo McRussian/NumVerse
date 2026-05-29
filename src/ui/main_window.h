@@ -38,6 +38,7 @@ private:
     // Toolbar
     QToolBar* m_toolbar;
     QAction*  m_applyAction;
+    QAction*  m_appendAction;
     QAction*  m_hintAction;
     QAction*  m_shuffleAction;
     QAction*  m_surrenderAction;
@@ -63,6 +64,7 @@ private:
     void onPlayerChanged(const QString& name);
 
     void onApplyTriggered();
+    void onAppendTriggered();
     void onUndoTriggered();
     void onHintTriggered();
     void onShuffleTriggered();

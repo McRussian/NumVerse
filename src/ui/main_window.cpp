@@ -48,7 +48,8 @@ MainWindow::MainWindow(QWidget* parent)
     auto* spacer = new QWidget(this);
     spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     m_toolbar->addWidget(spacer);
-    m_applyAction = m_toolbar->addAction("Применить");
+    m_appendAction = m_toolbar->addAction("Достроить");
+    m_applyAction  = m_toolbar->addAction("Применить");
     m_toolbar->hide();
 
     // Status bar: game info (left) + difficulty (right)
@@ -81,6 +82,7 @@ MainWindow::MainWindow(QWidget* parent)
     // Toolbar actions
     connect(m_newGameAction,   &QAction::triggered, this, &MainWindow::onNewGameTriggered);
     connect(m_undoAction,      &QAction::triggered, this, &MainWindow::onUndoTriggered);
+    connect(m_appendAction,    &QAction::triggered, this, &MainWindow::onAppendTriggered);
     connect(m_applyAction,     &QAction::triggered, this, &MainWindow::onApplyTriggered);
     connect(m_hintAction,      &QAction::triggered, this, &MainWindow::onHintTriggered);
     connect(m_shuffleAction,   &QAction::triggered, this, &MainWindow::onShuffleTriggered);
@@ -140,7 +142,8 @@ void MainWindow::startGame(int gameId)
     // Ensure score entry exists for this game
     if (!m_scores.count(gameId))
         m_scores[gameId] = GameScoreData{gameId, it->name};
-    m_applyAction->setVisible(hasFeature(it->features, GameFeature::ApplySelection));
+    m_applyAction->setVisible(hasFeature(it->features,  GameFeature::ApplySelection));
+    m_appendAction->setVisible(hasFeature(it->features, GameFeature::AppendRows));
     auto* board     = new GridGameBoard;
     m_gameWindow    = new GameWindow(m_currentGame, board);
 
@@ -202,6 +205,12 @@ void MainWindow::onUndoTriggered()
 {
     if (m_currentGame)
         m_currentGame->undo();
+}
+
+void MainWindow::onAppendTriggered()
+{
+    if (m_currentGame)
+        m_currentGame->append();
 }
 
 void MainWindow::onApplyTriggered()

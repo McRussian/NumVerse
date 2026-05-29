@@ -97,3 +97,12 @@ void AbstractGame::resetHints()
     m_hints.clear();
     m_hintIndex = 0;
 }
+
+void AbstractGame::replaceBoardAndEmit(Board newBoard)
+{
+    m_logic.replaceBoard(std::move(newBoard));
+    resetHints();
+    const GameState& s = m_logic.getState();
+    emit boardChanged(s.board);
+    emit stateChanged(s);
+}

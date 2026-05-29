@@ -16,6 +16,7 @@ class AbstractGame;
 enum class GameFeature : uint32_t {
     None           = 0,
     ApplySelection = 1 << 0,  // подтверждение выбранной последовательности
+    AppendRows     = 1 << 1,  // дострой: добавить оставшиеся числа новыми рядами
 };
 
 inline GameFeature operator|(GameFeature a, GameFeature b) {

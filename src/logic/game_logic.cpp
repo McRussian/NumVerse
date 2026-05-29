@@ -95,6 +95,13 @@ bool GameLogic::canUndo() const {
     return !m_history.empty();
 }
 
+void GameLogic::replaceBoard(Board newBoard) {
+    if (m_state.status != GameStatus::Playing) return;
+    m_state.board = std::move(newBoard);
+    m_state.selection.clear();
+    m_history.clear();
+}
+
 void GameLogic::shuffle() {
     if (m_state.status != GameStatus::Playing)
         return;

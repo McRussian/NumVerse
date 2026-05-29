@@ -23,6 +23,9 @@ public:
     void undo();
     bool canUndo() const;
 
+    // Replace board (e.g. append rows). Clears selection and history.
+    void replaceBoard(Board newBoard);
+
     const GameState& getState() const;
     GameResult buildResult(const std::string& playerName) const;
     std::vector<Selection> getHint() const;
