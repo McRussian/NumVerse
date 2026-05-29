@@ -1,4 +1,5 @@
 #include "game_logic.h"
+#include "data/cell_state.h"
 
 void GameLogic::init(GameConfig config, std::unique_ptr<IGameRules> rules) {
     m_config = config;
@@ -20,10 +21,13 @@ void GameLogic::select(uint8_t row, uint8_t col) {
     if (!m_state.board.isValid(row, col))
         return;
 
-    if (m_state.selection.contains(row, col))
+    if (m_state.selection.contains(row, col)) {
         m_state.selection.remove(row, col);
-    else
+        m_state.board.at(row, col).setState(CellState::Normal);
+    } else {
         m_state.selection.add(row, col);
+        m_state.board.at(row, col).setState(CellState::Selected);
+    }
 }
 
 void GameLogic::applySelection() {

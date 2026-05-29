@@ -16,7 +16,9 @@ void AbstractGame::start()
 void AbstractGame::selectCell(int row, int col)
 {
     m_logic.select(row, col);
-    emit stateChanged(m_logic.getState());
+    const GameState& s = m_logic.getState();
+    emit boardChanged(s.board);
+    emit stateChanged(s);
 }
 
 void AbstractGame::applySelection()
