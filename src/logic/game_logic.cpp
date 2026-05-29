@@ -22,6 +22,9 @@ void GameLogic::select(uint8_t row, uint8_t col) {
         return;
     if (!m_state.board.isValid(row, col))
         return;
+    const auto& cell = m_state.board.at(row, col);
+    if (cell.state() == CellState::Empty || cell.value() == 0)
+        return;
 
     if (m_state.selection.contains(row, col)) {
         m_state.selection.remove(row, col);

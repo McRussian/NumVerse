@@ -38,13 +38,17 @@ void GridGameBoard::highlightHint(const Selection& hint)
 {
     for (auto [row, col] : m_hintCells)
         if (row < m_rows && col < m_cols)
-            m_cells[row][col]->setState(CellState::Normal);
+            if (m_cells[row][col]->currentState() == CellState::Hinted)
+                m_cells[row][col]->setState(CellState::Normal);
     m_hintCells.clear();
 
     for (auto [row, col] : hint.cells()) {
         if (row < m_rows && col < m_cols) {
-            m_cells[row][col]->setState(CellState::Hinted);
-            m_hintCells.push_back({row, col});
+            auto* cell = m_cells[row][col];
+            if (cell->currentState() != CellState::Empty) {
+                cell->setState(CellState::Hinted);
+                m_hintCells.push_back({row, col});
+            }
         }
     }
 }

@@ -27,9 +27,14 @@ void GameCellWidget::setValue(uint16_t value)
     m_label->setText(value == 0 ? QString{} : QString::number(value));
 }
 
+CellState GameCellWidget::currentState() const
+{
+    return m_state;
+}
+
 void GameCellWidget::setState(CellState state)
 {
-    // Строка-свойство используется QSS: GameCellWidget[cellState="selected"] { ... }
+    m_state = state;
     const char* str = "normal";
     switch (state) {
         case CellState::Normal:      str = "normal";      break;
