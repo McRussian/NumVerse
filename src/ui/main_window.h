@@ -30,6 +30,7 @@ private:
     MenuWidget*     m_menu;
     GameWindow*     m_gameWindow  = nullptr;
     AbstractGame*   m_currentGame = nullptr;
+    int             m_currentGameId = -1;
 
     // Toolbar
     QToolBar* m_toolbar;

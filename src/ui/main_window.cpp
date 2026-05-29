@@ -121,9 +121,10 @@ void MainWindow::startGame(int gameId)
     m_currentGame = nullptr;
 
     // Create new game
-    m_currentGame = it->createGame(m_menu->currentPlayerName().toStdString(), config);
-    auto* board   = new GridGameBoard;
-    m_gameWindow  = new GameWindow(m_currentGame, board);
+    m_currentGame   = it->createGame(m_menu->currentPlayerName().toStdString(), config);
+    m_currentGameId = gameId;
+    auto* board     = new GridGameBoard;
+    m_gameWindow    = new GameWindow(m_currentGame, board);
 
     m_stack->addWidget(m_gameWindow);
     m_stack->setCurrentWidget(m_gameWindow);
@@ -195,11 +196,8 @@ void MainWindow::onSurrenderTriggered()
 
 void MainWindow::onNewGameTriggered()
 {
-    if (!m_currentGame) return;
-    m_currentGame->reset();
-    m_elapsedSecs = 0;
-    m_timeLabel->setText("  " + formatTime(0));
-    m_gameTimer->start();
+    if (m_currentGameId >= 0)
+        startGame(m_currentGameId);
 }
 
 void MainWindow::onGameOver(const GameResult& result)
