@@ -5,12 +5,18 @@
 #include "game_catalog.h"
 #include "game/abstract_game.h"
 
+#include <QAction>
 #include <QApplication>
 #include <QComboBox>
 #include <QLabel>
+#include <QAbstractButton>
+#include <QMessageBox>
+#include <QPushButton>
 #include <QSettings>
 #include <QStackedWidget>
 #include <QStatusBar>
+#include <QTimer>
+#include <QToolBar>
 #include <algorithm>
 
 static const char* kDiffLabels[] = {"Новичок", "Лёгкий", "Средний", "Сложный", "Эксперт"};
@@ -21,29 +27,64 @@ MainWindow::MainWindow(QWidget* parent)
     setWindowTitle("NumVerse");
     resize(680, 580);
 
+    // Central stack
     m_stack = new QStackedWidget(this);
     m_menu  = new MenuWidget;
     m_stack->addWidget(m_menu);
     setCentralWidget(m_stack);
 
-    // Status bar: difficulty selector
+    // Toolbar
+    m_toolbar = addToolBar("Игра");
+    m_toolbar->setMovable(false);
+    m_toolbar->setFloatable(false);
+    m_newGameAction  = m_toolbar->addAction("Новая игра");
+    m_toolbar->addSeparator();
+    m_hintAction     = m_toolbar->addAction("Подсказка");
+    m_surrenderAction = m_toolbar->addAction("Сдаться");
+    m_toolbar->hide();
+
+    // Status bar: game info (left) + difficulty (right)
+    m_scoreLabel = new QLabel(this);
+    m_movesLabel = new QLabel(this);
+    m_timeLabel  = new QLabel(this);
+    statusBar()->addWidget(m_scoreLabel);
+    statusBar()->addWidget(m_movesLabel);
+    statusBar()->addWidget(m_timeLabel);
+
     auto* diffLabel = new QLabel("  Сложность: ", this);
     m_diffBox = new QComboBox(this);
     for (const char* label : kDiffLabels)
         m_diffBox->addItem(label);
-
     statusBar()->addPermanentWidget(diffLabel);
     statusBar()->addPermanentWidget(m_diffBox);
 
-    connect(m_menu, &MenuWidget::gameSelected,   this, &MainWindow::startGame);
-    connect(m_menu, &MenuWidget::quitRequested,  qApp, &QApplication::quit);
-    connect(m_menu, &MenuWidget::playerChanged,  this, &MainWindow::onPlayerChanged);
+    setGameControlsVisible(false);
 
+    // Game timer
+    m_gameTimer = new QTimer(this);
+    m_gameTimer->setInterval(1000);
+    connect(m_gameTimer, &QTimer::timeout, this, [this] {
+        if (m_currentGame) {
+            m_currentGame->tick(1);
+            m_timeLabel->setText("  " + formatTime(++m_elapsedSecs));
+        }
+    });
+
+    // Toolbar actions
+    connect(m_newGameAction,   &QAction::triggered, this, &MainWindow::onNewGameTriggered);
+    connect(m_hintAction,      &QAction::triggered, this, &MainWindow::onHintTriggered);
+    connect(m_surrenderAction, &QAction::triggered, this, &MainWindow::onSurrenderTriggered);
+
+    // Menu signals
+    connect(m_menu, &MenuWidget::gameSelected,  this, &MainWindow::startGame);
+    connect(m_menu, &MenuWidget::quitRequested, qApp, &QApplication::quit);
+    connect(m_menu, &MenuWidget::playerChanged, this, &MainWindow::onPlayerChanged);
+
+    // Difficulty combo
     connect(m_diffBox, &QComboBox::currentIndexChanged, this, [this](int idx) {
         QSettings().setValue("players/" + m_menu->currentPlayerName() + "/difficulty", idx);
     });
 
-    // Load difficulty for the initial player
     onPlayerChanged(m_menu->currentPlayerName());
 }
 
@@ -69,29 +110,133 @@ void MainWindow::startGame(int gameId)
 
     const GameConfig config = it->makeConfig(currentDifficulty());
 
+    // Clean up previous game
+    disconnectGame();
     if (m_gameWindow) {
         m_stack->removeWidget(m_gameWindow);
         m_gameWindow->deleteLater();
         m_gameWindow = nullptr;
     }
+    delete m_currentGame;
+    m_currentGame = nullptr;
 
-    auto* game  = it->createGame(m_menu->currentPlayerName().toStdString(), config);
-    auto* board = new GridGameBoard;
-    m_gameWindow = new GameWindow(game, board);
+    // Create new game
+    m_currentGame = it->createGame(m_menu->currentPlayerName().toStdString(), config);
+    auto* board   = new GridGameBoard;
+    m_gameWindow  = new GameWindow(m_currentGame, board);
+
     m_stack->addWidget(m_gameWindow);
     m_stack->setCurrentWidget(m_gameWindow);
 
-    connect(m_gameWindow, &GameWindow::backRequested, this, &MainWindow::showMenu);
+    connectGame(m_currentGame);
+    m_toolbar->show();
+    setGameControlsVisible(true);
 
-    game->start();
+    m_elapsedSecs = 0;
+    m_timeLabel->setText("  " + formatTime(0));
+    m_gameTimer->start();
+
+    m_currentGame->start();
 }
 
 void MainWindow::showMenu()
 {
+    m_gameTimer->stop();
+    disconnectGame();
+
     m_stack->setCurrentWidget(m_menu);
     if (m_gameWindow) {
         m_stack->removeWidget(m_gameWindow);
         m_gameWindow->deleteLater();
         m_gameWindow = nullptr;
     }
+    delete m_currentGame;
+    m_currentGame = nullptr;
+
+    m_toolbar->hide();
+    setGameControlsVisible(false);
+}
+
+void MainWindow::connectGame(AbstractGame* game)
+{
+    m_gameConnections << connect(game, &AbstractGame::stateChanged,
+                                 this, &MainWindow::updateGameStatus);
+    m_gameConnections << connect(game, &AbstractGame::gameOver,
+                                 this, &MainWindow::onGameOver);
+}
+
+void MainWindow::disconnectGame()
+{
+    for (const auto& c : m_gameConnections)
+        disconnect(c);
+    m_gameConnections.clear();
+}
+
+void MainWindow::setGameControlsVisible(bool visible)
+{
+    m_scoreLabel->setVisible(visible);
+    m_movesLabel->setVisible(visible);
+    m_timeLabel->setVisible(visible);
+}
+
+void MainWindow::onHintTriggered()
+{
+    if (m_currentGame)
+        m_currentGame->hint();
+}
+
+void MainWindow::onSurrenderTriggered()
+{
+    if (!m_currentGame) return;
+    auto btn = QMessageBox::question(this, "Сдаться", "Завершить игру?");
+    if (btn == QMessageBox::Yes)
+        m_currentGame->surrender();
+}
+
+void MainWindow::onNewGameTriggered()
+{
+    if (!m_currentGame) return;
+    m_currentGame->reset();
+    m_elapsedSecs = 0;
+    m_timeLabel->setText("  " + formatTime(0));
+    m_gameTimer->start();
+}
+
+void MainWindow::onGameOver(const GameResult& result)
+{
+    m_gameTimer->stop();
+
+    QString msg = result.won
+        ? QString("Победа!\nСчёт: %1   Время: %2")
+              .arg(result.score).arg(formatTime(result.timeSecs))
+        : QString("Игра окончена.\nСчёт: %1   Время: %2")
+              .arg(result.score).arg(formatTime(result.timeSecs));
+
+    QMessageBox box(this);
+    box.setWindowTitle("Конец игры");
+    box.setText(msg);
+    box.addButton("Заново",  QMessageBox::AcceptRole);
+    QAbstractButton* menuBtn = box.addButton("В меню", QMessageBox::RejectRole);
+    box.exec();
+
+    if (box.clickedButton() == menuBtn)
+        showMenu();
+    else
+        onNewGameTriggered();
+}
+
+void MainWindow::updateGameStatus(const GameState& state)
+{
+    m_scoreLabel->setText(QString("  Счёт: %1  ").arg(state.score));
+    if (state.movesLeft > 0)
+        m_movesLabel->setText(QString("Ходы: %1  ").arg(state.movesLeft));
+    else
+        m_movesLabel->clear();
+}
+
+QString MainWindow::formatTime(uint32_t secs)
+{
+    return QString("%1:%2")
+        .arg(secs / 60, 2, 10, QChar('0'))
+        .arg(secs % 60, 2, 10, QChar('0'));
 }

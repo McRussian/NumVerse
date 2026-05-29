@@ -4,7 +4,6 @@
 
 class AbstractGame;
 class AbstractGameBoard;
-class GamePanel;
 
 class GameWindow : public QWidget {
     Q_OBJECT
@@ -12,13 +11,14 @@ public:
     explicit GameWindow(AbstractGame* game, AbstractGameBoard* board,
                         QWidget* parent = nullptr);
 
+    AbstractGame* game() const;
+
 signals:
     void backRequested();
 
 private:
     AbstractGame*      m_game;
     AbstractGameBoard* m_board;
-    GamePanel*         m_panel;
 
     void setupConnections();
 };
