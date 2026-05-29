@@ -41,11 +41,11 @@ GameConfig numberChaosConfig(Difficulty d)
     GameConfig c;
     c.difficulty = d;
     switch (d) {
-    case Difficulty::Beginner: c.gridRows = 3; c.gridCols = 4; break;
-    case Difficulty::Easy:     c.gridRows = 4; c.gridCols = 5; break;
-    case Difficulty::Medium:   c.gridRows = 5; c.gridCols = 6; break;
-    case Difficulty::Hard:     c.gridRows = 5; c.gridCols = 7; break;
-    case Difficulty::Expert:   c.gridRows = 6; c.gridCols = 8; break;
+    case Difficulty::Beginner: c.gridRows = 3; c.gridCols = 4; c.scoreMultiplierPct = 100; break;
+    case Difficulty::Easy:     c.gridRows = 4; c.gridCols = 5; c.scoreMultiplierPct = 120; break;
+    case Difficulty::Medium:   c.gridRows = 5; c.gridCols = 6; c.scoreMultiplierPct = 150; break;
+    case Difficulty::Hard:     c.gridRows = 5; c.gridCols = 7; c.scoreMultiplierPct = 200; break;
+    case Difficulty::Expert:   c.gridRows = 6; c.gridCols = 8; c.scoreMultiplierPct = 300; break;
     }
     return c;
 }

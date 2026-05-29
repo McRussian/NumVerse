@@ -50,6 +50,12 @@ void GameLogic::applySelection() {
     bool validMove = m_state.score > scoreBefore;
 
     if (validMove) {
+        // Apply difficulty multiplier to gained score
+        if (m_config.scoreMultiplierPct != 100) {
+            uint32_t gained = m_state.score - scoreBefore;
+            m_state.score   = scoreBefore + gained * m_config.scoreMultiplierPct / 100;
+        }
+
         if (m_config.historySize > 0) {
             if (m_history.size() >= m_config.historySize)
                 m_history.pop_front();
@@ -119,6 +125,20 @@ void GameLogic::shuffle() {
 void GameLogic::forfeit() {
     if (m_state.status != GameStatus::Playing)
         return;
+
+    // Penalty: score × (cleared / total)
+    int total = m_config.gridRows * m_config.gridCols;
+    if (total > 0) {
+        int remaining = 0;
+        for (uint8_t r = 0; r < m_state.board.rows(); ++r)
+            for (uint8_t c = 0; c < m_state.board.cols(); ++c)
+                if (m_state.board.at(r, c).state() != CellState::Empty)
+                    ++remaining;
+        int cleared = total - remaining;
+        m_state.score = m_state.score * static_cast<uint32_t>(cleared)
+                        / static_cast<uint32_t>(total);
+    }
+
     m_state.status = GameStatus::Lost;
 }
 

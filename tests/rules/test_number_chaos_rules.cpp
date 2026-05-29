@@ -158,8 +158,9 @@ TEST(NumberChaosRulesTest, SecondOrderWithArithmeticDiffsInvalid) {
 // --- calcScore ---
 
 TEST(NumberChaosRulesTest, CalcScore) {
-    EXPECT_EQ(NumberChaosRules::calcScore(3), 30u);
-    EXPECT_EQ(NumberChaosRules::calcScore(5), 50u);
+    EXPECT_EQ(NumberChaosRules::calcScore(3), 30u);  // 3*2*5
+    EXPECT_EQ(NumberChaosRules::calcScore(4), 60u);  // 4*3*5
+    EXPECT_EQ(NumberChaosRules::calcScore(5), 100u); // 5*4*5
 }
 
 // --- applySelection ---

@@ -13,5 +13,6 @@ struct GameConfig {
     uint16_t timeLimitSecs = 0; // 0 = no limit
     uint16_t targetSum = 0;
     uint8_t  level = 0;
-    uint8_t  historySize = 5;   // undo depth, 0 = disabled
+    uint8_t  historySize = 5;      // undo depth, 0 = disabled
+    uint16_t scoreMultiplierPct = 100; // difficulty score multiplier, 100 = ×1.0
 };

@@ -245,7 +245,8 @@ void NumberChaosRules::applySelection(GameState& state, const GameConfig&)
 }
 
 uint32_t NumberChaosRules::calcScore(size_t length) {
-    return static_cast<uint32_t>(length) * 10;
+    // 3→30, 4→60, 5→100, 6→150: quadratic growth rewards longer sequences
+    return static_cast<uint32_t>(length * (length - 1) * 5);
 }
 
 bool NumberChaosRules::isValidSequence(const std::vector<uint16_t>& v) {
