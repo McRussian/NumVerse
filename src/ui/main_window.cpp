@@ -39,10 +39,14 @@ MainWindow::MainWindow(QWidget* parent)
     m_toolbar->setFloatable(false);
     m_newGameAction   = m_toolbar->addAction("Новая игра");
     m_toolbar->addSeparator();
-    m_applyAction     = m_toolbar->addAction("Применить");
     m_hintAction      = m_toolbar->addAction("Подсказка");
     m_toolbar->addSeparator();
     m_surrenderAction = m_toolbar->addAction("Сдаться");
+
+    auto* spacer = new QWidget(this);
+    spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    m_toolbar->addWidget(spacer);
+    m_applyAction = m_toolbar->addAction("Применить");
     m_toolbar->hide();
 
     // Status bar: game info (left) + difficulty (right)
