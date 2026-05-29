@@ -31,11 +31,34 @@ inline constexpr int CellMinSize  = 60;
 inline constexpr int CellSpacing  = 4;
 inline constexpr int GridPadding  = 4;
 
+// Background for the main menu page
+inline const QColor MenuBackground{30, 30, 40};
+
 // Default stylesheet — override by loading a .qss file at app level.
 // Uses property selector: GameCellWidget[cellState="selected"] { ... }
 inline QString defaultStyleSheet()
 {
     return QString{
+        "MenuWidget {"
+        "  background-color: %15;"
+        "}"
+        "QLabel#menuTitle {"
+        "  color: #e8e8e8;"
+        "}"
+        "QLabel#menuSubtitle {"
+        "  color: #aaaaaa;"
+        "  font-size: 15px;"
+        "}"
+        "QPushButton#menuButton {"
+        "  color: #e8e8e8;"
+        "  font-size: 15px;"
+        "  padding: 6px 20px;"
+        "  border: 1px solid #555;"
+        "  border-radius: 6px;"
+        "  background-color: #3a3a50;"
+        "}"
+        "QPushButton#menuButton:hover  { background-color: #4a4a66; }"
+        "QPushButton#menuButton:pressed { background-color: #2a2a3a; }"
         "GridGameBoard {"
         "  background-color: %10;"
         "  border-radius: 6px;"
@@ -75,7 +98,8 @@ inline QString defaultStyleSheet()
          CellEmpty.name())
     .arg(GridBackground.name())
     .arg(PanelBackground.name(), PanelText.name())
-    .arg(CellHinted.name(), TextHinted.name());
+    .arg(CellHinted.name(), TextHinted.name())
+    .arg(MenuBackground.name());
 }
 
 } // namespace Theme

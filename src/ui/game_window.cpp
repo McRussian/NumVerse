@@ -4,7 +4,9 @@
 #include "abstract_game_board.h"
 #include "game/abstract_game.h"
 
+#include <QAbstractButton>
 #include <QMessageBox>
+#include <QPushButton>
 #include <QVBoxLayout>
 
 GameWindow::GameWindow(AbstractGame* game, AbstractGameBoard* board, QWidget* parent)
@@ -38,11 +40,25 @@ void GameWindow::setupConnections()
     connect(m_game, &AbstractGame::gameOver, this, [this](const GameResult& result) {
         m_panel->timer()->stop();
         QString msg = result.won
-            ? QString("Победа! Счёт: %1\nВремя: %2 сек.")
+            ? QString("Победа!\nСчёт: %1   Время: %2 сек.")
                   .arg(result.score).arg(result.timeSecs)
-            : QString("Игра окончена. Счёт: %1\nВремя: %2 сек.")
+            : QString("Игра окончена.\nСчёт: %1   Время: %2 сек.")
                   .arg(result.score).arg(result.timeSecs);
-        QMessageBox::information(this, "Конец игры", msg);
+
+        QMessageBox box(this);
+        box.setWindowTitle("Конец игры");
+        box.setText(msg);
+        box.addButton("Заново", QMessageBox::AcceptRole);
+        QAbstractButton* menuBtn = box.addButton("В меню", QMessageBox::RejectRole);
+        box.exec();
+
+        if (box.clickedButton() == menuBtn) {
+            emit backRequested();
+        } else {
+            m_panel->timer()->reset();
+            m_game->reset();
+            m_panel->timer()->start();
+        }
     });
 
     // UI → Логика

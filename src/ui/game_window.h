@@ -12,6 +12,9 @@ public:
     explicit GameWindow(AbstractGame* game, AbstractGameBoard* board,
                         QWidget* parent = nullptr);
 
+signals:
+    void backRequested();
+
 private:
     AbstractGame*      m_game;
     AbstractGameBoard* m_board;
