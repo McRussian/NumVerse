@@ -3,7 +3,6 @@
 #include "game_window.h"
 #include "grid_game_board.h"
 #include "game_catalog.h"
-#include "high_score_dialog.h"
 #include "game/abstract_game.h"
 
 #include <QAction>
@@ -136,8 +135,11 @@ void MainWindow::startGame(int gameId)
     // Create new game
     m_currentGame     = it->createGame(m_menu->currentPlayerName().toStdString(), config);
     m_currentGameId   = gameId;
-    m_currentGameName = it->name;
     m_currentFeatures = it->features;
+
+    // Ensure score entry exists for this game
+    if (!m_scores.count(gameId))
+        m_scores[gameId] = GameScoreData{gameId, it->name};
     m_applyAction->setVisible(hasFeature(it->features, GameFeature::ApplySelection));
     auto* board     = new GridGameBoard;
     m_gameWindow    = new GameWindow(m_currentGame, board);
@@ -239,8 +241,9 @@ void MainWindow::onGameOver(const GameResult& result)
     m_gameTimer->stop();
 
     const uint8_t lvl = static_cast<uint8_t>(currentDifficulty());
-    const bool r1 = m_scoreByScore.add(lvl, result);
-    const bool r2 = m_scoreByTime.add(lvl, result);
+    auto& gsd = m_scores[m_currentGameId];
+    const bool r1 = gsd.byScore.add(lvl, result);
+    const bool r2 = gsd.byTime.add(lvl, result);
     const bool newRecord = r1 || r2;
 
     QString msg = result.won
@@ -269,8 +272,7 @@ void MainWindow::onGameOver(const GameResult& result)
 
 void MainWindow::showHighScores()
 {
-    const QString name = m_currentGameName.isEmpty() ? "NumVerse" : m_currentGameName;
-    HighScoreDialog dlg(m_scoreByScore, m_scoreByTime, name, this);
+    HighScoreDialog dlg(m_scores, this);
     dlg.exec();
 }
 

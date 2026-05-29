@@ -2,12 +2,11 @@
 
 #include <QComboBox>
 #include <QDialogButtonBox>
-#include <QMessageBox>
-#include <QPushButton>
 #include <QHBoxLayout>
 #include <QHeaderView>
 #include <QLabel>
-#include <QTabWidget>
+#include <QMessageBox>
+#include <QPushButton>
 #include <QTableWidget>
 #include <QTableWidgetItem>
 #include <QVBoxLayout>
@@ -28,124 +27,178 @@ QString HighScoreDialog::formatTime(uint32_t secs)
         .arg(secs % 60, 2, 10, QChar('0'));
 }
 
-static QTableWidget* makeTable(QWidget* parent)
-{
-    auto* t = new QTableWidget(0, 5, parent);
-    t->setHorizontalHeaderLabels({"#", "Игрок", "Очки", "Время", "Уровень"});
-    t->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
-    t->horizontalHeader()->setSectionResizeMode(4, QHeaderView::ResizeToContents);
-    t->verticalHeader()->setVisible(false);
-    t->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    t->setSelectionBehavior(QAbstractItemView::SelectRows);
-    t->setAlternatingRowColors(true);
-    return t;
-}
-
-HighScoreDialog::HighScoreDialog(ScoreBoard&    byScore,
-                                 ScoreBoard&    byTime,
-                                 const QString& gameName,
-                                 QWidget*       parent)
+HighScoreDialog::HighScoreDialog(std::map<int, GameScoreData>& scores,
+                                 QWidget* parent)
     : QDialog(parent)
-    , m_byScore(byScore)
-    , m_byTime(byTime)
+    , m_scores(scores)
 {
-    setWindowTitle("Рекорды — " + gameName);
-    setMinimumSize(480, 360);
+    setWindowTitle("Таблица рекордов");
+    setMinimumSize(520, 380);
 
-    m_filter = new QComboBox(this);
-    m_filter->addItem("Все уровни", -1);
+    // Filters
+    m_gameFilter  = new QComboBox(this);
+    m_levelFilter = new QComboBox(this);
+    m_sortMode    = new QComboBox(this);
+
+    m_gameFilter->addItem("Все игры", -1);
+    for (const auto& [id, gsd] : m_scores)
+        m_gameFilter->addItem(gsd.name, id);
+
+    m_levelFilter->addItem("Все уровни", -1);
     for (int i = 0; i < 5; ++i)
-        m_filter->addItem(kDiffNames[i], i);
+        m_levelFilter->addItem(kDiffNames[i], i);
+
+    m_sortMode->addItem("По очкам",  static_cast<int>(RankingMode::ByScore));
+    m_sortMode->addItem("По времени", static_cast<int>(RankingMode::ByTime));
 
     auto* filterRow = new QHBoxLayout;
+    filterRow->addWidget(new QLabel("Игра:", this));
+    filterRow->addWidget(m_gameFilter);
+    filterRow->addSpacing(12);
     filterRow->addWidget(new QLabel("Уровень:", this));
-    filterRow->addWidget(m_filter);
+    filterRow->addWidget(m_levelFilter);
+    filterRow->addSpacing(12);
+    filterRow->addWidget(new QLabel("Сорт.:", this));
+    filterRow->addWidget(m_sortMode);
     filterRow->addStretch();
 
-    m_scoreTable = makeTable(this);
-    m_timeTable  = makeTable(this);
+    // Table
+    m_table = new QTableWidget(0, 6, this);
+    m_table->setHorizontalHeaderLabels(
+        {"#", "Игра", "Игрок", "Очки", "Время", "Уровень"});
+    m_table->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
+    m_table->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Stretch);
+    m_table->verticalHeader()->setVisible(false);
+    m_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    m_table->setSelectionBehavior(QAbstractItemView::SelectRows);
+    m_table->setAlternatingRowColors(true);
 
-    auto* tabs = new QTabWidget(this);
-    tabs->addTab(m_scoreTable, "По очкам");
-    tabs->addTab(m_timeTable,  "По времени");
-
-    auto* buttons    = new QDialogButtonBox(QDialogButtonBox::Close, this);
-    auto* clearBtn   = buttons->addButton("Очистить", QDialogButtonBox::ResetRole);
+    auto* buttons  = new QDialogButtonBox(QDialogButtonBox::Close, this);
+    auto* clearBtn = buttons->addButton("Очистить", QDialogButtonBox::ResetRole);
     connect(buttons,  &QDialogButtonBox::rejected, this, &QDialog::reject);
     connect(clearBtn, &QPushButton::clicked,       this, &HighScoreDialog::clearRecords);
 
     auto* layout = new QVBoxLayout(this);
     layout->addLayout(filterRow);
-    layout->addWidget(tabs);
+    layout->addWidget(m_table);
     layout->addWidget(buttons);
 
-    connect(m_filter, &QComboBox::currentIndexChanged, this, [this](int idx) {
-        refresh(m_filter->itemData(idx).toInt());
-    });
+    auto refresh = [this] { this->refresh(); };
+    connect(m_gameFilter,  &QComboBox::currentIndexChanged, this, refresh);
+    connect(m_levelFilter, &QComboBox::currentIndexChanged, this, refresh);
+    connect(m_sortMode,    &QComboBox::currentIndexChanged, this, refresh);
 
-    refresh(-1);
+    refresh();
 }
 
-void HighScoreDialog::fillTable(QTableWidget*     table,
-                                const ScoreBoard& board,
-                                int               levelFilter)
+std::vector<HighScoreDialog::Row>
+HighScoreDialog::collectRows(int gameFilter, int levelFilter, RankingMode mode) const
 {
-    // Collect entries
-    struct Row { uint8_t level; GameResult result; };
     std::vector<Row> rows;
 
-    const auto& all = board.all();
-    for (const auto& [lvl, vec] : all) {
-        if (levelFilter >= 0 && static_cast<int>(lvl) != levelFilter)
+    for (const auto& [id, gsd] : m_scores) {
+        if (gameFilter >= 0 && id != gameFilter)
             continue;
-        for (const auto& r : vec)
-            rows.push_back({lvl, r});
+
+        const ScoreBoard& board = (mode == RankingMode::ByScore)
+            ? gsd.byScore : gsd.byTime;
+        const auto& all = board.all();
+
+        for (const auto& [lvl, vec] : all) {
+            if (levelFilter >= 0 && static_cast<int>(lvl) != levelFilter)
+                continue;
+            for (const auto& r : vec)
+                rows.push_back({gsd.name, lvl, r});
+        }
     }
 
-    table->setRowCount(static_cast<int>(rows.size()));
+    // Sort combined results
+    if (mode == RankingMode::ByScore) {
+        std::sort(rows.begin(), rows.end(), [](const Row& a, const Row& b) {
+            if (a.result.score != b.result.score)
+                return a.result.score > b.result.score;
+            return a.result.timeSecs < b.result.timeSecs;
+        });
+    } else {
+        std::sort(rows.begin(), rows.end(), [](const Row& a, const Row& b) {
+            if (a.result.timeSecs != b.result.timeSecs)
+                return a.result.timeSecs < b.result.timeSecs;
+            return a.result.score > b.result.score;
+        });
+    }
 
-    auto cell = [](const QString& text, Qt::Alignment align = Qt::AlignCenter) {
+    return rows;
+}
+
+void HighScoreDialog::refresh()
+{
+    const int gameFilter  = m_gameFilter->currentData().toInt();
+    const int levelFilter = m_levelFilter->currentData().toInt();
+    const auto mode = static_cast<RankingMode>(m_sortMode->currentData().toInt());
+
+    const auto rows = collectRows(gameFilter, levelFilter, mode);
+
+    // Hide "Игра" column when a single game is selected
+    const bool showGame = (gameFilter < 0);
+    m_table->setColumnHidden(1, !showGame);
+
+    m_table->setRowCount(static_cast<int>(rows.size()));
+
+    auto cell = [](const QString& text,
+                   Qt::Alignment align = Qt::AlignCenter) {
         auto* item = new QTableWidgetItem(text);
         item->setTextAlignment(align);
         return item;
     };
 
     for (int i = 0; i < static_cast<int>(rows.size()); ++i) {
-        const auto& [lvl, r] = rows[i];
-        table->setItem(i, 0, cell(QString::number(i + 1)));
-        table->setItem(i, 1, cell(QString::fromStdString(r.playerName),
-                                  Qt::AlignLeft | Qt::AlignVCenter));
-        table->setItem(i, 2, cell(QString::number(r.score)));
-        table->setItem(i, 3, cell(formatTime(r.timeSecs)));
-        table->setItem(i, 4, cell(diffName(lvl)));
+        const auto& row = rows[i];
+        m_table->setItem(i, 0, cell(QString::number(i + 1)));
+        m_table->setItem(i, 1, cell(row.gameName,
+                                    Qt::AlignLeft | Qt::AlignVCenter));
+        m_table->setItem(i, 2, cell(QString::fromStdString(row.result.playerName),
+                                    Qt::AlignLeft | Qt::AlignVCenter));
+        m_table->setItem(i, 3, cell(QString::number(row.result.score)));
+        m_table->setItem(i, 4, cell(formatTime(row.result.timeSecs)));
+        m_table->setItem(i, 5, cell(diffName(row.level)));
     }
 }
 
 void HighScoreDialog::clearRecords()
 {
-    int levelFilter = m_filter->currentData().toInt();
-    QString what = levelFilter < 0
-        ? "все рекорды"
-        : QString("рекорды уровня «%1»").arg(diffName(static_cast<uint8_t>(levelFilter)));
+    const int gameFilter  = m_gameFilter->currentData().toInt();
+    const int levelFilter = m_levelFilter->currentData().toInt();
 
-    auto btn = QMessageBox::question(this, "Очистить",
-                                     QString("Удалить %1?").arg(what));
-    if (btn != QMessageBox::Yes)
-        return;
-
-    if (levelFilter < 0) {
-        m_byScore.clearAll();
-        m_byTime.clearAll();
-    } else {
-        m_byScore.clear(static_cast<uint8_t>(levelFilter));
-        m_byTime.clear(static_cast<uint8_t>(levelFilter));
+    QString what;
+    if (gameFilter < 0 && levelFilter < 0)
+        what = "все рекорды";
+    else if (gameFilter < 0)
+        what = QString("рекорды уровня «%1» во всех играх")
+                   .arg(diffName(static_cast<uint8_t>(levelFilter)));
+    else {
+        const QString gname = m_scores.count(gameFilter)
+            ? m_scores.at(gameFilter).name : QString::number(gameFilter);
+        what = levelFilter < 0
+            ? QString("все рекорды «%1»").arg(gname)
+            : QString("рекорды «%1» уровня «%2»")
+                  .arg(gname).arg(diffName(static_cast<uint8_t>(levelFilter)));
     }
 
-    refresh(levelFilter);
-}
+    if (QMessageBox::question(this, "Очистить",
+            QString("Удалить %1?").arg(what)) != QMessageBox::Yes)
+        return;
 
-void HighScoreDialog::refresh(int levelFilter)
-{
-    fillTable(m_scoreTable, m_byScore, levelFilter);
-    fillTable(m_timeTable,  m_byTime,  levelFilter);
+    for (auto& [id, gsd] : m_scores) {
+        if (gameFilter >= 0 && id != gameFilter)
+            continue;
+        if (levelFilter < 0) {
+            gsd.byScore.clearAll();
+            gsd.byTime.clearAll();
+        } else {
+            gsd.byScore.clear(static_cast<uint8_t>(levelFilter));
+            gsd.byTime.clear(static_cast<uint8_t>(levelFilter));
+        }
+    }
+
+    refresh();
 }

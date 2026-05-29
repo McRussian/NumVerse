@@ -2,11 +2,12 @@
 
 #include <QMainWindow>
 #include <QVector>
+#include <map>
 #include "game_descriptor.h"
+#include "high_score_dialog.h"
 #include "logic/data/difficulty.h"
 #include "logic/data/game_result.h"
 #include "logic/data/game_state.h"
-#include "logic/score_board.h"
 
 class QAction;
 class QComboBox;
@@ -49,10 +50,8 @@ private:
     QLabel*    m_movesLabel;
     QLabel*    m_timeLabel;
 
-    // Scoreboards (per game type, keyed by difficulty as level)
-    ScoreBoard m_scoreByScore{RankingMode::ByScore};
-    ScoreBoard m_scoreByTime {RankingMode::ByTime};
-    QString    m_currentGameName;
+    // Scores: keyed by gameId
+    std::map<int, GameScoreData> m_scores;
 
     // Timer
     QTimer*   m_gameTimer;
