@@ -40,6 +40,7 @@ MainWindow::MainWindow(QWidget* parent)
     m_newGameAction   = m_toolbar->addAction("Новая игра");
     m_toolbar->addSeparator();
     m_hintAction      = m_toolbar->addAction("Подсказка");
+    m_shuffleAction   = m_toolbar->addAction("Перемешать");
     m_toolbar->addSeparator();
     m_surrenderAction = m_toolbar->addAction("Сдаться");
 
@@ -80,6 +81,7 @@ MainWindow::MainWindow(QWidget* parent)
     connect(m_newGameAction,   &QAction::triggered, this, &MainWindow::onNewGameTriggered);
     connect(m_applyAction,     &QAction::triggered, this, &MainWindow::onApplyTriggered);
     connect(m_hintAction,      &QAction::triggered, this, &MainWindow::onHintTriggered);
+    connect(m_shuffleAction,   &QAction::triggered, this, &MainWindow::onShuffleTriggered);
     connect(m_surrenderAction, &QAction::triggered, this, &MainWindow::onSurrenderTriggered);
 
     // Menu signals
@@ -193,6 +195,12 @@ void MainWindow::onApplyTriggered()
 {
     if (m_currentGame)
         m_currentGame->applySelection();
+}
+
+void MainWindow::onShuffleTriggered()
+{
+    if (m_currentGame)
+        m_currentGame->shuffle();
 }
 
 void MainWindow::onHintTriggered()

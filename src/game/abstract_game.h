@@ -27,6 +27,7 @@ public:
     void tick(uint32_t secs);
     void hint();
     void reset();
+    void shuffle();
     void surrender();
 
     const GameState& state() const;

@@ -1,5 +1,7 @@
 #include "game_logic.h"
 #include "data/cell_state.h"
+#include <algorithm>
+#include <random>
 
 void GameLogic::init(GameConfig config, std::unique_ptr<IGameRules> rules) {
     m_config = config;
@@ -44,6 +46,33 @@ void GameLogic::applySelection() {
         --m_state.movesLeft;
         if (m_state.movesLeft == 0)
             m_state.status = GameStatus::Lost;
+    }
+}
+
+void GameLogic::shuffle() {
+    if (m_state.status != GameStatus::Playing)
+        return;
+
+    std::vector<std::pair<uint8_t, uint8_t>> positions;
+    std::vector<uint16_t> values;
+
+    for (uint8_t r = 0; r < m_state.board.rows(); ++r)
+        for (uint8_t c = 0; c < m_state.board.cols(); ++c) {
+            const auto& cell = m_state.board.at(r, c);
+            if (cell.state() != CellState::Empty && cell.value() != 0) {
+                positions.push_back({r, c});
+                values.push_back(cell.value());
+            }
+        }
+
+    if (values.size() < 2) return;
+
+    std::shuffle(values.begin(), values.end(), std::mt19937{std::random_device{}()});
+
+    m_state.selection.clear();
+    for (size_t i = 0; i < positions.size(); ++i) {
+        auto [r, c] = positions[i];
+        m_state.board.at(r, c) = GameCell(values[i], CellState::Normal);
     }
 }
 

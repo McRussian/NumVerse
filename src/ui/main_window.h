@@ -37,6 +37,7 @@ private:
     QToolBar* m_toolbar;
     QAction*  m_applyAction;
     QAction*  m_hintAction;
+    QAction*  m_shuffleAction;
     QAction*  m_surrenderAction;
     QAction*  m_newGameAction;
 
@@ -57,6 +58,7 @@ private:
 
     void onApplyTriggered();
     void onHintTriggered();
+    void onShuffleTriggered();
     void onSurrenderTriggered();
     void onNewGameTriggered();
     void onGameOver(const GameResult& result);
