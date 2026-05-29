@@ -1,8 +1,8 @@
 #include "game_catalog.h"
+#include "game/number_chaos_game.h"
 
 namespace {
 
-// Mini 4x3 grid preview: row 1 shows a geometric sequence 4→8→16 highlighted.
 void paintNumberChaos(QPainter& p, const QRect& r)
 {
     static const int kValues[3][4] = {
@@ -10,7 +10,6 @@ void paintNumberChaos(QPainter& p, const QRect& r)
         { 4,  8, 16,  2},
         { 9,  1,  6, 14}
     };
-    // highlighted = geometric sequence 4,8,16 at row 1 cols 0-2
     auto highlighted = [](int row, int col) {
         return row == 1 && col >= 0 && col <= 2;
     };
@@ -24,7 +23,6 @@ void paintNumberChaos(QPainter& p, const QRect& r)
 
     QFont f = p.font();
     f.setPointSize(10);
-    f.setBold(false);
     p.setFont(f);
 
     for (int row = 0; row < rows; ++row) {
@@ -38,11 +36,34 @@ void paintNumberChaos(QPainter& p, const QRect& r)
     }
 }
 
+GameConfig numberChaosConfig(Difficulty d)
+{
+    GameConfig c;
+    c.difficulty = d;
+    switch (d) {
+    case Difficulty::Beginner: c.gridRows = 3; c.gridCols = 4; break;
+    case Difficulty::Easy:     c.gridRows = 4; c.gridCols = 5; break;
+    case Difficulty::Medium:   c.gridRows = 5; c.gridCols = 6; break;
+    case Difficulty::Hard:     c.gridRows = 5; c.gridCols = 7; break;
+    case Difficulty::Expert:   c.gridRows = 6; c.gridCols = 8; break;
+    }
+    return c;
+}
+
 } // namespace
 
 std::vector<GameDescriptor> GameCatalog::allGames()
 {
     return {
-        {0, "Number Chaos", "Числовые последовательности", paintNumberChaos},
+        {
+            0,
+            "Number Chaos",
+            "Числовые последовательности",
+            paintNumberChaos,
+            numberChaosConfig,
+            [](std::string name, GameConfig cfg) -> AbstractGame* {
+                return new NumberChaosGame(std::move(name), cfg);
+            }
+        },
     };
 }

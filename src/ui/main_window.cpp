@@ -1,13 +1,13 @@
 #include "main_window.h"
 #include "menu_widget.h"
-#include "settings_dialog.h"
 #include "game_window.h"
 #include "grid_game_board.h"
+#include "game_catalog.h"
 #include "game/abstract_game.h"
-#include "game/number_chaos_game.h"
 
 #include <QApplication>
 #include <QStackedWidget>
+#include <algorithm>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -26,11 +26,15 @@ MainWindow::MainWindow(QWidget* parent)
 
 void MainWindow::startGame(int gameId)
 {
-    SettingsDialog dlg(this);
-    if (dlg.exec() != QDialog::Accepted)
+    const auto games = GameCatalog::allGames();
+    const auto it = std::find_if(games.begin(), games.end(),
+                                 [gameId](const GameDescriptor& d) { return d.id == gameId; });
+    if (it == games.end())
         return;
 
-    auto ps = dlg.settings();
+    const QString    playerName = m_menu->currentPlayerName();
+    const Difficulty difficulty = m_menu->currentDifficulty();
+    const GameConfig config     = it->makeConfig(difficulty);
 
     if (m_gameWindow) {
         m_stack->removeWidget(m_gameWindow);
@@ -38,14 +42,7 @@ void MainWindow::startGame(int gameId)
         m_gameWindow = nullptr;
     }
 
-    AbstractGame* game = nullptr;
-    switch (gameId) {
-    case 0:
-    default:
-        game = new NumberChaosGame(ps.playerName, ps.config);
-        break;
-    }
-
+    auto* game  = it->createGame(playerName.toStdString(), config);
     auto* board = new GridGameBoard;
     m_gameWindow = new GameWindow(game, board);
     m_stack->addWidget(m_gameWindow);

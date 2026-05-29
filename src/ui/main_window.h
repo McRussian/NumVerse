@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QMainWindow>
+#include "game_descriptor.h"
 
 class QStackedWidget;
 class MenuWidget;
