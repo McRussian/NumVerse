@@ -2,6 +2,7 @@
 #include "abstract_game_board.h"
 #include "game/abstract_game.h"
 
+#include <QScrollArea>
 #include <QVBoxLayout>
 
 GameWindow::GameWindow(AbstractGame* game, AbstractGameBoard* board, QWidget* parent)
@@ -9,10 +10,16 @@ GameWindow::GameWindow(AbstractGame* game, AbstractGameBoard* board, QWidget* pa
     , m_game(game)
     , m_board(board)
 {
+    auto* scroll = new QScrollArea(this);
+    scroll->setWidget(m_board);
+    scroll->setWidgetResizable(false);
+    scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    scroll->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+
     auto* layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
-    layout->addWidget(m_board);
+    layout->addWidget(scroll);
     setLayout(layout);
 
     setupConnections();
