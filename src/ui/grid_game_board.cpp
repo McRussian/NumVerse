@@ -87,38 +87,36 @@ void GridGameBoard::rebuildGrid(const Board& board)
     updateCellSizes();
 }
 
-QSize GridGameBoard::minimumSizeHint() const
+static QSize contentSize(int rows, int cols)
 {
-    if (m_rows == 0 || m_cols == 0)
-        return QWidget::minimumSizeHint();
-    int w = m_cols * (Theme::CellMinSize + Theme::CellSpacing)
+    int w = cols * (Theme::CellMinSize + Theme::CellSpacing)
             - Theme::CellSpacing + 2 * Theme::GridPadding;
-    int h = m_rows * (Theme::CellMinSize + Theme::CellSpacing)
+    int h = rows * (Theme::CellMinSize + Theme::CellSpacing)
             - Theme::CellSpacing + 2 * Theme::GridPadding;
     return QSize(w, h);
 }
 
-void GridGameBoard::resizeEvent(QResizeEvent* event)
+QSize GridGameBoard::sizeHint() const
 {
-    AbstractGameBoard::resizeEvent(event);
-    updateCellSizes();
+    if (m_rows == 0 || m_cols == 0) return QWidget::sizeHint();
+    return contentSize(m_rows, m_cols);
+}
+
+QSize GridGameBoard::minimumSizeHint() const
+{
+    return sizeHint();
 }
 
 void GridGameBoard::updateCellSizes()
 {
-    if (m_rows == 0 || m_cols == 0)
-        return;
+    if (m_rows == 0 || m_cols == 0) return;
 
-    int spacingW = Theme::CellSpacing * (m_cols - 1) + Theme::GridPadding * 2;
-    int spacingH = Theme::CellSpacing * (m_rows - 1) + Theme::GridPadding * 2;
-    int cellW    = (width()  - spacingW) / m_cols;
-    int cellH    = (height() - spacingH) / m_rows;
-    int cellSize = std::max(Theme::CellMinSize, std::min(cellW, cellH));
-
-    int fontSize = std::max(10, cellSize / 3);
+    const int cellSize = Theme::CellMinSize;
+    const int fontSize = std::max(10, cellSize / 3);
     for (auto& row : m_cells)
         for (auto* cell : row) {
             cell->setFixedSize(cellSize, cellSize);
             cell->setFontSize(fontSize);
         }
+    updateGeometry();
 }

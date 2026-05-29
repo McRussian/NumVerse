@@ -12,7 +12,8 @@ GameWindow::GameWindow(AbstractGame* game, AbstractGameBoard* board, QWidget* pa
 {
     auto* scroll = new QScrollArea(this);
     scroll->setWidget(m_board);
-    scroll->setWidgetResizable(true);
+    scroll->setWidgetResizable(false);
+    scroll->setAlignment(Qt::AlignCenter);
     scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     scroll->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
 

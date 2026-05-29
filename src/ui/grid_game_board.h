@@ -14,11 +14,11 @@ public:
     void updateBoard(const Board& board) override;
     void highlightHint(const Selection& hint) override;
 
+    QSize sizeHint() const override;
     QSize minimumSizeHint() const override;
 
 protected:
     void paintEvent(QPaintEvent* event) override;
-    void resizeEvent(QResizeEvent* event) override;
 
 private:
     QGridLayout*                              m_layout;
