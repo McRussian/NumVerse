@@ -2,9 +2,9 @@
 
 #include <QDialog>
 #include <map>
+#include <vector>
 #include "logic/score_board.h"
 
-// Per-game score storage. Held by MainWindow, passed by reference to the dialog.
 struct GameScoreData {
     int        id   = 0;
     QString    name;
@@ -13,6 +13,7 @@ struct GameScoreData {
 };
 
 class QComboBox;
+class QTabWidget;
 class QTableWidget;
 
 class HighScoreDialog : public QDialog {
@@ -22,25 +23,20 @@ public:
                              QWidget* parent = nullptr);
 
 private:
-    struct Row {
-        QString    gameName;
-        uint8_t    level;
-        GameResult result;
+    struct TabData {
+        int           gameId;
+        QComboBox*    levelFilter;
+        QComboBox*    sortMode;
+        QTableWidget* table;
     };
 
-    void   refresh();
-    void   clearRecords();
-
-    std::vector<Row> collectRows(int gameFilter, int levelFilter,
-                                 RankingMode mode) const;
+    void refreshTab(const TabData& tab);
+    void clearCurrentTab();
 
     static QString diffName(uint8_t level);
     static QString formatTime(uint32_t secs);
 
     std::map<int, GameScoreData>& m_scores;
-
-    QComboBox*    m_gameFilter;
-    QComboBox*    m_levelFilter;
-    QComboBox*    m_sortMode;
-    QTableWidget* m_table;
+    QTabWidget*          m_tabs;
+    std::vector<TabData> m_tabData;
 };
