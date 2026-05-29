@@ -12,11 +12,13 @@ Board collapseEmptyRows(const Board& board)
     const int cols = board.cols();
     std::vector<uint8_t> kept;
     for (uint8_t r = 0; r < board.rows(); ++r)
-        for (int c = 0; c < cols; ++c)
-            if (board.at(r, static_cast<uint8_t>(c)).state() != CellState::Empty) {
+        for (int c = 0; c < cols; ++c) {
+            const auto& cell = board.at(r, static_cast<uint8_t>(c));
+            if (cell.state() != CellState::Empty && cell.value() != 0) {
                 kept.push_back(r);
                 break;
             }
+        }
 
     if (kept.size() == static_cast<size_t>(board.rows()))
         return board;
@@ -147,9 +149,11 @@ std::vector<Selection> TenMatchRules::getHint(const Board& board) const
 {
     std::vector<std::pair<uint8_t, uint8_t>> cells;
     for (uint8_t r = 0; r < board.rows(); ++r)
-        for (uint8_t c = 0; c < board.cols(); ++c)
-            if (board.at(r, c).state() != CellState::Empty)
+        for (uint8_t c = 0; c < board.cols(); ++c) {
+            const auto& cell = board.at(r, c);
+            if (cell.state() != CellState::Empty && cell.value() != 0)
                 cells.push_back({r, c});
+        }
 
     std::vector<Selection> results;
     for (size_t i = 0; i < cells.size(); ++i) {

@@ -46,10 +46,12 @@ void TenMatchGame::append()
                 = current.at(static_cast<uint8_t>(r), static_cast<uint8_t>(c));
 
     size_t idx = 0;
-    for (int r = rows; r < rows + extraRows && idx < remaining.size(); ++r)
-        for (int c = 0; c < cols && idx < remaining.size(); ++c, ++idx)
+    for (int r = rows; r < rows + extraRows; ++r)
+        for (int c = 0; c < cols; ++c, ++idx)
             newBoard.at(static_cast<uint8_t>(r), static_cast<uint8_t>(c))
-                = GameCell(remaining[idx]);
+                = (idx < remaining.size())
+                    ? GameCell(remaining[idx])
+                    : GameCell(0, CellState::Empty);
 
     replaceBoardAndEmit(std::move(newBoard));
 }
