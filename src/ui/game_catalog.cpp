@@ -59,6 +59,7 @@ std::vector<GameDescriptor> GameCatalog::allGames()
             0,
             "Number Chaos",
             "Числовые последовательности",
+            GameFeature::ApplySelection,
             paintNumberChaos,
             numberChaosConfig,
             [](std::string name, GameConfig cfg) -> AbstractGame* {

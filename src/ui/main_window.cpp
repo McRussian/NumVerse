@@ -124,8 +124,10 @@ void MainWindow::startGame(int gameId)
     m_currentGame = nullptr;
 
     // Create new game
-    m_currentGame   = it->createGame(m_menu->currentPlayerName().toStdString(), config);
-    m_currentGameId = gameId;
+    m_currentGame     = it->createGame(m_menu->currentPlayerName().toStdString(), config);
+    m_currentGameId   = gameId;
+    m_currentFeatures = it->features;
+    m_applyAction->setVisible(hasFeature(it->features, GameFeature::ApplySelection));
     auto* board     = new GridGameBoard;
     m_gameWindow    = new GameWindow(m_currentGame, board);
 

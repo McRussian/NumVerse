@@ -31,6 +31,7 @@ private:
     GameWindow*     m_gameWindow  = nullptr;
     AbstractGame*   m_currentGame = nullptr;
     int             m_currentGameId = -1;
+    GameFeature     m_currentFeatures = GameFeature::None;
 
     // Toolbar
     QToolBar* m_toolbar;
