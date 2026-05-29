@@ -2,7 +2,6 @@
 #include "game_card_widget.h"
 #include "game_catalog.h"
 
-#include <QButtonGroup>
 #include <QFont>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -13,12 +12,9 @@
 #include <QStyleOption>
 #include <QVBoxLayout>
 
-static const char* kDiffLabels[] = {"Новичок", "Лёгкий", "Средний", "Сложный", "Эксперт"};
-
 MenuWidget::MenuWidget(QWidget* parent)
     : QWidget(parent)
 {
-    // Title
     auto* title = new QLabel("NumVerse", this);
     title->setObjectName("menuTitle");
     title->setAlignment(Qt::AlignCenter);
@@ -27,7 +23,6 @@ MenuWidget::MenuWidget(QWidget* parent)
     f.setBold(true);
     title->setFont(f);
 
-    // Player name row
     auto* playerLabel = new QLabel("Игрок:", this);
     playerLabel->setObjectName("menuSubtitle");
     m_nameEdit = new QLineEdit(this);
@@ -42,21 +37,6 @@ MenuWidget::MenuWidget(QWidget* parent)
     playerRow->addWidget(m_nameEdit);
     playerRow->addStretch();
 
-    // Difficulty buttons
-    auto* diffRow = new QHBoxLayout;
-    diffRow->addStretch();
-    m_diffGroup = new QButtonGroup(this);
-    for (int i = 0; i < 5; ++i) {
-        auto* btn = new QPushButton(kDiffLabels[i], this);
-        btn->setObjectName("diffButton");
-        btn->setCheckable(true);
-        btn->setFixedHeight(30);
-        m_diffGroup->addButton(btn, i);
-        diffRow->addWidget(btn);
-    }
-    diffRow->addStretch();
-
-    // Game cards
     auto* cardsWidget = new QWidget(this);
     auto* cardsLayout = new QHBoxLayout(cardsWidget);
     cardsLayout->setAlignment(Qt::AlignCenter);
@@ -69,7 +49,6 @@ MenuWidget::MenuWidget(QWidget* parent)
         connect(card, &GameCardWidget::clicked, this, &MenuWidget::gameSelected);
     }
 
-    // Quit button
     auto* quitBtn = new QPushButton("Выход", this);
     quitBtn->setObjectName("menuButton");
     quitBtn->setFixedHeight(36);
@@ -79,14 +58,11 @@ MenuWidget::MenuWidget(QWidget* parent)
     quitRow->addWidget(quitBtn);
     quitRow->addStretch();
 
-    // Main layout
     auto* layout = new QVBoxLayout(this);
     layout->addStretch(1);
     layout->addWidget(title);
     layout->addSpacing(16);
     layout->addLayout(playerRow);
-    layout->addSpacing(10);
-    layout->addLayout(diffRow);
     layout->addStretch(1);
     layout->addWidget(cardsWidget);
     layout->addStretch(1);
@@ -96,45 +72,21 @@ MenuWidget::MenuWidget(QWidget* parent)
 
     connect(quitBtn, &QPushButton::clicked, this, &MenuWidget::quitRequested);
 
-    connect(m_nameEdit, &QLineEdit::textChanged, this, [this](const QString& name) {
-        QSettings().setValue("lastPlayer", name.isEmpty() ? "Player" : name);
-        loadPlayerSettings(name);
-    });
-
-    connect(m_diffGroup, &QButtonGroup::idClicked, this, [this](int) {
-        savePlayerDifficulty();
-    });
-
-    // Load last player
+    // Set initial value without triggering the signal
     QSettings s;
-    QString lastName = s.value("lastPlayer", "Player").toString();
-    m_nameEdit->setText(lastName);
-    loadPlayerSettings(lastName);
+    m_nameEdit->setText(s.value("lastPlayer", "Player").toString());
+
+    connect(m_nameEdit, &QLineEdit::textChanged, this, [this](const QString& name) {
+        const QString effective = name.trimmed().isEmpty() ? "Player" : name.trimmed();
+        QSettings().setValue("lastPlayer", effective);
+        emit playerChanged(effective);
+    });
 }
 
 QString MenuWidget::currentPlayerName() const
 {
-    QString n = m_nameEdit->text().trimmed();
+    const QString n = m_nameEdit->text().trimmed();
     return n.isEmpty() ? "Player" : n;
-}
-
-Difficulty MenuWidget::currentDifficulty() const
-{
-    return static_cast<Difficulty>(m_diffGroup->checkedId());
-}
-
-void MenuWidget::loadPlayerSettings(const QString& name)
-{
-    QString key = "players/" + (name.isEmpty() ? "Player" : name) + "/difficulty";
-    int idx = QSettings().value(key, 1).toInt(); // default Easy
-    if (auto* btn = m_diffGroup->button(idx))
-        btn->setChecked(true);
-}
-
-void MenuWidget::savePlayerDifficulty()
-{
-    QString name = currentPlayerName();
-    QSettings().setValue("players/" + name + "/difficulty", m_diffGroup->checkedId());
 }
 
 void MenuWidget::paintEvent(QPaintEvent* event)

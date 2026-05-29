@@ -6,8 +6,14 @@
 #include "game/abstract_game.h"
 
 #include <QApplication>
+#include <QComboBox>
+#include <QLabel>
+#include <QSettings>
 #include <QStackedWidget>
+#include <QStatusBar>
 #include <algorithm>
+
+static const char* kDiffLabels[] = {"Новичок", "Лёгкий", "Средний", "Сложный", "Эксперт"};
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -20,21 +26,48 @@ MainWindow::MainWindow(QWidget* parent)
     m_stack->addWidget(m_menu);
     setCentralWidget(m_stack);
 
-    connect(m_menu, &MenuWidget::gameSelected, this, &MainWindow::startGame);
-    connect(m_menu, &MenuWidget::quitRequested, qApp, &QApplication::quit);
+    // Status bar: difficulty selector
+    auto* diffLabel = new QLabel("  Сложность: ", this);
+    m_diffBox = new QComboBox(this);
+    for (const char* label : kDiffLabels)
+        m_diffBox->addItem(label);
+
+    statusBar()->addPermanentWidget(diffLabel);
+    statusBar()->addPermanentWidget(m_diffBox);
+
+    connect(m_menu, &MenuWidget::gameSelected,   this, &MainWindow::startGame);
+    connect(m_menu, &MenuWidget::quitRequested,  qApp, &QApplication::quit);
+    connect(m_menu, &MenuWidget::playerChanged,  this, &MainWindow::onPlayerChanged);
+
+    connect(m_diffBox, &QComboBox::currentIndexChanged, this, [this](int idx) {
+        QSettings().setValue("players/" + m_menu->currentPlayerName() + "/difficulty", idx);
+    });
+
+    // Load difficulty for the initial player
+    onPlayerChanged(m_menu->currentPlayerName());
+}
+
+Difficulty MainWindow::currentDifficulty() const
+{
+    return static_cast<Difficulty>(m_diffBox->currentIndex());
+}
+
+void MainWindow::onPlayerChanged(const QString& name)
+{
+    int idx = QSettings().value("players/" + name + "/difficulty", 1).toInt();
+    QSignalBlocker blocker(m_diffBox);
+    m_diffBox->setCurrentIndex(idx);
 }
 
 void MainWindow::startGame(int gameId)
 {
     const auto games = GameCatalog::allGames();
-    const auto it = std::find_if(games.begin(), games.end(),
-                                 [gameId](const GameDescriptor& d) { return d.id == gameId; });
+    const auto it    = std::find_if(games.begin(), games.end(),
+                                    [gameId](const GameDescriptor& d) { return d.id == gameId; });
     if (it == games.end())
         return;
 
-    const QString    playerName = m_menu->currentPlayerName();
-    const Difficulty difficulty = m_menu->currentDifficulty();
-    const GameConfig config     = it->makeConfig(difficulty);
+    const GameConfig config = it->makeConfig(currentDifficulty());
 
     if (m_gameWindow) {
         m_stack->removeWidget(m_gameWindow);
@@ -42,7 +75,7 @@ void MainWindow::startGame(int gameId)
         m_gameWindow = nullptr;
     }
 
-    auto* game  = it->createGame(playerName.toStdString(), config);
+    auto* game  = it->createGame(m_menu->currentPlayerName().toStdString(), config);
     auto* board = new GridGameBoard;
     m_gameWindow = new GameWindow(game, board);
     m_stack->addWidget(m_gameWindow);

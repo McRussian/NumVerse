@@ -1,9 +1,7 @@
 #pragma once
 
 #include <QWidget>
-#include "logic/data/difficulty.h"
 
-class QButtonGroup;
 class QLineEdit;
 
 class MenuWidget : public QWidget {
@@ -11,20 +9,16 @@ class MenuWidget : public QWidget {
 public:
     explicit MenuWidget(QWidget* parent = nullptr);
 
-    QString    currentPlayerName() const;
-    Difficulty currentDifficulty() const;
+    QString currentPlayerName() const;
 
 signals:
     void gameSelected(int gameId);
+    void playerChanged(const QString& name);
     void quitRequested();
 
 protected:
     void paintEvent(QPaintEvent* event) override;
 
 private:
-    QLineEdit*    m_nameEdit;
-    QButtonGroup* m_diffGroup;
-
-    void loadPlayerSettings(const QString& name);
-    void savePlayerDifficulty();
+    QLineEdit* m_nameEdit;
 };
