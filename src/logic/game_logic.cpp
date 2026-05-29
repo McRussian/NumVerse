@@ -73,6 +73,15 @@ void GameLogic::undo() {
     m_state.score     = snap.score;
     m_state.movesLeft = snap.movesLeft;
     m_state.selection.clear();
+
+    // Snapshot was taken while cells were Selected — restore them to Normal
+    for (uint8_t r = 0; r < m_state.board.rows(); ++r)
+        for (uint8_t c = 0; c < m_state.board.cols(); ++c) {
+            auto& cell = m_state.board.at(r, c);
+            if (cell.state() == CellState::Selected || cell.state() == CellState::Hinted)
+                cell.setState(CellState::Normal);
+        }
+
     m_history.pop_back();
 }
 
