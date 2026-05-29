@@ -32,8 +32,6 @@ private:
     static bool isGeometric(const std::vector<uint16_t>& v);
     static bool isFibonacci(const std::vector<uint16_t>& v);
     static bool isSquares(const std::vector<uint16_t>& v);
-    static bool isAllEven(const std::vector<uint16_t>& v);
-    static bool isAllOdd(const std::vector<uint16_t>& v);
     static bool isAllPrime(const std::vector<uint16_t>& v);
     static bool isFactorial(const std::vector<uint16_t>& v);
     static bool isSecondOrder(const std::vector<uint16_t>& v);

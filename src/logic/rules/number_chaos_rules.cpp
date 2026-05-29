@@ -18,9 +18,9 @@ enum class SeqType {
 
 std::vector<SeqType> availableTypes(Difficulty d)
 {
-    std::vector<SeqType> t = {SeqType::Arithmetic, SeqType::AllEven, SeqType::AllOdd};
-    if (d >= Difficulty::Easy)   t.push_back(SeqType::Geometric);
-    if (d >= Difficulty::Medium) { t.push_back(SeqType::Squares); t.push_back(SeqType::AllPrime); }
+    std::vector<SeqType> t = {SeqType::Arithmetic};
+    if (d >= Difficulty::Easy)   { t.push_back(SeqType::Geometric); t.push_back(SeqType::AllPrime); }
+    if (d >= Difficulty::Medium) { t.push_back(SeqType::Squares); }
     if (d >= Difficulty::Hard)   { t.push_back(SeqType::Factorial); t.push_back(SeqType::SecondOrder); }
     return t;
 }
@@ -86,22 +86,6 @@ std::vector<uint16_t> generateSeq(std::mt19937& rng, SeqType type, int len, uint
             }
         }
         return v;
-    }
-
-    case SeqType::AllEven: {
-        std::vector<uint16_t> pool;
-        for (uint16_t i = 2; i <= maxVal; i += 2) pool.push_back(i);
-        if ((int)pool.size() < len) return {};
-        std::shuffle(pool.begin(), pool.end(), rng);
-        return {pool.begin(), pool.begin() + len};
-    }
-
-    case SeqType::AllOdd: {
-        std::vector<uint16_t> pool;
-        for (uint16_t i = 1; i <= maxVal; i += 2) pool.push_back(i);
-        if ((int)pool.size() < len) return {};
-        std::shuffle(pool.begin(), pool.end(), rng);
-        return {pool.begin(), pool.begin() + len};
     }
 
     case SeqType::AllPrime: {
@@ -269,8 +253,6 @@ bool NumberChaosRules::isValidSequence(const std::vector<uint16_t>& v) {
     return isArithmetic(v)  ||
            isGeometric(v)   ||
            isSquares(v)     ||
-           isAllEven(v)     ||
-           isAllOdd(v)      ||
            isAllPrime(v)    ||
            isFactorial(v)   ||
            isSecondOrder(v);
@@ -323,16 +305,6 @@ bool NumberChaosRules::isSquares(const std::vector<uint16_t>& v) {
     if (diff != 1 && diff != -1) return false;
     for (size_t i = 2; i < roots.size(); ++i)
         if ((int)roots[i] - (int)roots[i-1] != diff) return false;
-    return true;
-}
-
-bool NumberChaosRules::isAllEven(const std::vector<uint16_t>& v) {
-    for (auto val : v) if (val % 2 != 0) return false;
-    return true;
-}
-
-bool NumberChaosRules::isAllOdd(const std::vector<uint16_t>& v) {
-    for (auto val : v) if (val % 2 != 1) return false;
     return true;
 }
 

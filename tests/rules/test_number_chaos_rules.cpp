@@ -34,9 +34,9 @@ TEST(NumberChaosRulesTest, ArithmeticDescending) {
     EXPECT_TRUE(NumberChaosRules::isValidSequence(V{11, 8, 5, 2}));
 }
 
-TEST(NumberChaosRulesTest, RepeatedValuesValidAsAllOdd) {
-    // {7,7,7}: арифм. diff=0 — нет, но isAllOdd — да. Валидно.
-    EXPECT_TRUE(NumberChaosRules::isValidSequence(V{7, 7, 7}));
+TEST(NumberChaosRulesTest, RepeatedValuesInvalid) {
+    // {9,9,9}: арифм. diff=0 — нет; 9 не простое. Невалидно.
+    EXPECT_FALSE(NumberChaosRules::isValidSequence(V{9, 9, 9}));
 }
 
 TEST(NumberChaosRulesTest, ArithmeticBrokenInvalid) {
@@ -77,9 +77,9 @@ TEST(NumberChaosRulesTest, SquaresMiddleRange) {
     EXPECT_TRUE(NumberChaosRules::isValidSequence(V{4, 9, 16, 25}));
 }
 
-TEST(NumberChaosRulesTest, SquaresNonConsecutiveValidAsAllOdd) {
-    // {1,9,25}: корни 1,3,5 — шаг 2, isSquares=false, но isAllOdd=true. Валидно.
-    EXPECT_TRUE(NumberChaosRules::isValidSequence(V{1, 9, 25}));
+TEST(NumberChaosRulesTest, SquaresNonConsecutiveInvalid) {
+    // {1,9,25}: корни 1,3,5 — шаг 2, isSquares=false; AllOdd удалён. Невалидно.
+    EXPECT_FALSE(NumberChaosRules::isValidSequence(V{1, 9, 25}));
 }
 
 TEST(NumberChaosRulesTest, SquaresNotAllSquaresInvalid) {
@@ -88,23 +88,10 @@ TEST(NumberChaosRulesTest, SquaresNotAllSquaresInvalid) {
     EXPECT_FALSE(NumberChaosRules::isValidSequence(V{3, 8, 15}));
 }
 
-// --- Все чётные ---
+// --- Removed: AllEven, AllOdd ---
+// Mixed arbitrary even/odd values no longer form valid sequences.
 
-TEST(NumberChaosRulesTest, AllEven) {
-    EXPECT_TRUE(NumberChaosRules::isValidSequence(V{6, 2, 14, 8}));
-}
-
-TEST(NumberChaosRulesTest, NotAllEvenInvalid) {
-    EXPECT_FALSE(NumberChaosRules::isValidSequence(V{4, 5, 7}));
-}
-
-// --- Все нечётные ---
-
-TEST(NumberChaosRulesTest, AllOdd) {
-    EXPECT_TRUE(NumberChaosRules::isValidSequence(V{1, 7, 3, 9}));
-}
-
-TEST(NumberChaosRulesTest, NotAllOddInvalid) {
+TEST(NumberChaosRulesTest, MixedEvenOddInvalid) {
     EXPECT_FALSE(NumberChaosRules::isValidSequence(V{4, 5, 7}));
 }
 
