@@ -373,45 +373,61 @@ bool NumberChaosRules::isSecondOrder(const std::vector<uint16_t>& v) {
     return true;
 }
 
-static bool nextCombination(std::vector<size_t>& idx, size_t n) {
-    int i = static_cast<int>(idx.size()) - 1;
-    while (i >= 0 && idx[i] == n - idx.size() + static_cast<size_t>(i)) --i;
-    if (i < 0) return false;
-    ++idx[i];
-    for (size_t j = static_cast<size_t>(i) + 1; j < idx.size(); ++j)
-        idx[j] = idx[j-1] + 1;
-    return true;
-}
-
 std::vector<Selection> NumberChaosRules::getHint(const Board& board) const {
-    std::vector<std::pair<uint8_t, uint8_t>> cells;
-    for (uint8_t r = 0; r < board.rows(); ++r)
-        for (uint8_t c = 0; c < board.cols(); ++c) {
-            const auto& cell = board.at(r, c);
-            if (!cell.isNoise() && cell.state() != CellState::Empty)
-                cells.push_back({r, c});
-        }
-
-    size_t n = cells.size();
-    if (n < 3) return {};
-
     std::vector<Selection> results;
-    size_t maxSize = std::min(n, size_t{5});
-    for (size_t size = 3; size <= maxSize; ++size) {
-        std::vector<size_t> idx(size);
-        std::iota(idx.begin(), idx.end(), 0);
-        do {
-            std::vector<uint16_t> values;
-            values.reserve(size);
-            for (size_t i : idx)
-                values.push_back(board.at(cells[i].first, cells[i].second).value());
-            if (isValidSequence(values)) {
-                Selection sel;
-                for (size_t i : idx) sel.add(cells[i].first, cells[i].second);
-                results.push_back(sel);
+
+    // Check all windows of length 3-5 within a contiguous non-noise non-empty segment
+    auto scanSegment = [&](const std::vector<std::pair<uint8_t,uint8_t>>& seg) {
+        size_t n = seg.size();
+        for (size_t start = 0; start < n; ++start) {
+            for (size_t len = 3; len <= std::min(n - start, size_t{5}); ++len) {
+                std::vector<uint16_t> vals;
+                vals.reserve(len);
+                for (size_t i = start; i < start + len; ++i)
+                    vals.push_back(board.at(seg[i].first, seg[i].second).value());
+                if (isValidSequence(vals)) {
+                    Selection sel;
+                    for (size_t i = start; i < start + len; ++i)
+                        sel.add(seg[i].first, seg[i].second);
+                    results.push_back(sel);
+                }
             }
-        } while (nextCombination(idx, n));
+        }
+    };
+
+    auto isSeqCell = [&](uint8_t r, uint8_t c) {
+        const auto& cell = board.at(r, c);
+        return !cell.isNoise() && cell.state() != CellState::Empty;
+    };
+
+    // Scan rows
+    for (uint8_t r = 0; r < board.rows(); ++r) {
+        std::vector<std::pair<uint8_t,uint8_t>> seg;
+        for (uint8_t c = 0; c < board.cols(); ++c) {
+            if (isSeqCell(r, c)) {
+                seg.push_back({r, c});
+            } else {
+                scanSegment(seg);
+                seg.clear();
+            }
+        }
+        scanSegment(seg);
     }
+
+    // Scan columns
+    for (uint8_t c = 0; c < board.cols(); ++c) {
+        std::vector<std::pair<uint8_t,uint8_t>> seg;
+        for (uint8_t r = 0; r < board.rows(); ++r) {
+            if (isSeqCell(r, c)) {
+                seg.push_back({r, c});
+            } else {
+                scanSegment(seg);
+                seg.clear();
+            }
+        }
+        scanSegment(seg);
+    }
+
     return results;
 }
 

@@ -27,6 +27,16 @@ void GameLogic::select(uint8_t row, uint8_t col) {
     if (cell.state() == CellState::Empty || cell.value() == 0 || cell.isNoise())
         return;
 
+    // Enforce H/V constraint: all selected cells must share the same row or column
+    const auto& selCells = m_state.selection.cells();
+    if (!selCells.empty()) {
+        bool sameRow = std::all_of(selCells.begin(), selCells.end(),
+                                   [row](auto p) { return p.first == row; });
+        bool sameCol = std::all_of(selCells.begin(), selCells.end(),
+                                   [col](auto p) { return p.second == col; });
+        if (!sameRow && !sameCol) return;
+    }
+
     if (m_state.selection.contains(row, col)) {
         m_state.selection.remove(row, col);
         m_state.board.at(row, col).setState(CellState::Normal);

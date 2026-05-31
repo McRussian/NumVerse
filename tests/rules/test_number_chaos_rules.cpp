@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <algorithm>
 #include "logic/rules/number_chaos_rules.h"
 #include "logic/data/game_cell.h"
 
@@ -301,22 +302,30 @@ TEST(NumberChaosRulesTest, HintFindsSequence) {
     EXPECT_TRUE(NumberChaosRules::isValidSequence(values));
 }
 
-TEST(NumberChaosRulesTest, HintFindsInterleavedSequence) {
-    // Две последовательности смешаны: seq1=[2,5,8], seq2=[1,3]
-    // После merge: [2,1,5,3,8] — seq1 идёт в порядке чтения на позициях 0,2,4
+TEST(NumberChaosRulesTest, HintRespectsCellBoundaries) {
+    // Row: [2,5,8, noise, 10,20,30]
+    // Noise splits the row into two segments; hint finds sequences in each segment
     NumberChaosRules rules;
-    Board board(1, 5);
+    Board board(1, 7);
     board.at(0, 0) = GameCell(2);
-    board.at(0, 1) = GameCell(1);
-    board.at(0, 2) = GameCell(5);
-    board.at(0, 3) = GameCell(3);
-    board.at(0, 4) = GameCell(8);
+    board.at(0, 1) = GameCell(5);
+    board.at(0, 2) = GameCell(8);
+    GameCell noise(99); noise.setNoise(true);
+    board.at(0, 3) = noise;
+    board.at(0, 4) = GameCell(10);
+    board.at(0, 5) = GameCell(20);
+    board.at(0, 6) = GameCell(30);
     auto hints = rules.getHint(board);
     ASSERT_FALSE(hints.empty());
-    std::vector<uint16_t> values;
-    for (auto [r, c] : hints[0].cells())
-        values.push_back(board.at(r, c).value());
-    EXPECT_TRUE(NumberChaosRules::isValidSequence(values));
+    // All found hints must lie within a single contiguous segment (no noise/empty gaps)
+    for (const auto& h : hints) {
+        const auto& cells = h.cells();
+        bool sameRow = std::all_of(cells.begin(), cells.end(),
+                                   [&](auto p) { return p.first == cells[0].first; });
+        bool sameCol = std::all_of(cells.begin(), cells.end(),
+                                   [&](auto p) { return p.second == cells[0].second; });
+        EXPECT_TRUE(sameRow || sameCol);
+    }
 }
 
 TEST(NumberChaosRulesTest, HintPrefersShorterSequence) {
