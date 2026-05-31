@@ -26,6 +26,8 @@ public:
     // Replace board (e.g. append rows). Clears selection and history.
     void replaceBoard(Board newBoard);
 
+    void setNeighborHighlights(const Selection& cells);
+
     const GameState& getState() const;
     GameResult buildResult(const std::string& playerName) const;
     std::vector<Selection> getHint() const;

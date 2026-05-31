@@ -14,9 +14,15 @@ std::unique_ptr<IGameRules> TenMatchGame::createRules() const
 void TenMatchGame::selectCell(int row, int col)
 {
     AbstractGame::selectCell(row, col);
-    // Auto-apply when exactly 2 cells are selected
-    if (state().selection.cells().size() == 2)
+    const auto& sel = state().selection.cells();
+    if (sel.size() == 2) {
         AbstractGame::applySelection();
+    } else if (sel.size() == 1) {
+        auto [r, c] = sel[0];
+        applyNeighborHighlights(TenMatchRules::getAllNeighbors(state().board, r, c));
+    } else {
+        applyNeighborHighlights(Selection{});
+    }
 }
 
 void TenMatchGame::append()

@@ -43,6 +43,7 @@ void GameCellWidget::setState(CellState state)
         case CellState::Hinted:      str = "hinted";      break;
         case CellState::Locked:      str = "locked";      break;
         case CellState::Empty:       str = "empty";       break;
+        case CellState::Neighbor:    str = "neighbor";    break;
     }
 
     setProperty("cellState", str);

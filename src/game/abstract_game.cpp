@@ -21,8 +21,15 @@ void AbstractGame::selectCell(int row, int col)
     emit stateChanged(s);
 }
 
+void AbstractGame::applyNeighborHighlights(const Selection& cells)
+{
+    m_logic.setNeighborHighlights(cells);
+    emit boardChanged(m_logic.getState().board);
+}
+
 void AbstractGame::applySelection()
 {
+    m_logic.setNeighborHighlights(Selection{});  // clear neighbor highlights on apply
     if (m_logic.getState().selection.empty() && !m_hints.empty()) {
         size_t lastIdx = (m_hintIndex + m_hints.size() - 1) % m_hints.size();
         for (auto [r, c] : m_hints[lastIdx].cells())

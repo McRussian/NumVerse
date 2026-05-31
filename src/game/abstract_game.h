@@ -43,6 +43,7 @@ protected:
     void emitStateSignals();
     void resetHints();
     void replaceBoardAndEmit(Board newBoard);
+    void applyNeighborHighlights(const Selection& cells);
 
 private:
     std::string            m_playerName;

@@ -10,5 +10,6 @@ enum class CellState : uint8_t {
     Highlighted,
     Hinted,
     Locked,
-    Empty
+    Empty,
+    Neighbor   // adjacent cell to the current selection (game-specific hint)
 };

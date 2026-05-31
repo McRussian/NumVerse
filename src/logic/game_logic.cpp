@@ -174,6 +174,18 @@ void GameLogic::tick(uint32_t secs) {
         m_state.status = GameStatus::Lost;
 }
 
+void GameLogic::setNeighborHighlights(const Selection& cells) {
+    for (uint8_t r = 0; r < m_state.board.rows(); ++r)
+        for (uint8_t c = 0; c < m_state.board.cols(); ++c) {
+            auto& cell = m_state.board.at(r, c);
+            if (cell.state() == CellState::Neighbor)
+                cell.setState(CellState::Normal);
+        }
+    for (auto [r, c] : cells.cells())
+        if (m_state.board.at(r, c).state() == CellState::Normal)
+            m_state.board.at(r, c).setState(CellState::Neighbor);
+}
+
 const GameState& GameLogic::getState() const {
     return m_state;
 }

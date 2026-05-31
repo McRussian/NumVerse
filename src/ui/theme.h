@@ -12,6 +12,7 @@ inline const QColor CellHighlighted{255, 220,  80};
 inline const QColor CellHinted     {120, 200, 120};
 inline const QColor CellLocked     {160, 160, 160};
 inline const QColor CellEmpty      {245, 245, 245};
+inline const QColor CellNeighbor   {185, 185, 185};
 
 // Text colors
 inline const QColor TextNormal     { 30,  30,  30};
@@ -116,7 +117,8 @@ inline QString defaultStyleSheet()
         "GameCellWidget[cellState='highlighted'] { background-color: %5; color: %6; }"
         "GameCellWidget[cellState='hinted']      { background-color: %13; color: %14; }"
         "GameCellWidget[cellState='locked']      { background-color: %7; color: %8; }"
-        "GameCellWidget[cellState='empty']       { background-color: %9; color: %2; }"
+        "GameCellWidget[cellState='empty']        { background-color: %9; color: %2; }"
+        "GameCellWidget[cellState='neighbor']     { background-color: %16; color: %2; }"
     }
     .arg(CellNormal.name(),      TextNormal.name(),
          CellSelected.name(),    TextSelected.name(),
@@ -126,7 +128,8 @@ inline QString defaultStyleSheet()
     .arg(GridBackground.name())
     .arg(PanelBackground.name(), PanelText.name())
     .arg(CellHinted.name(), TextHinted.name())
-    .arg(MenuBackground.name());
+    .arg(MenuBackground.name())
+    .arg(CellNeighbor.name());
 }
 
 } // namespace Theme

@@ -109,6 +109,20 @@ bool TenMatchRules::isNeighbor(const Board& board, int r1, int c1, int r2, int c
     return false;
 }
 
+Selection TenMatchRules::getAllNeighbors(const Board& board, int row, int col)
+{
+    Selection result;
+    for (uint8_t r = 0; r < board.rows(); ++r)
+        for (uint8_t c = 0; c < board.cols(); ++c) {
+            if (r == row && c == col) continue;
+            const auto& cell = board.at(r, c);
+            if (cell.state() == CellState::Empty || cell.value() == 0) continue;
+            if (isNeighbor(board, row, col, r, c))
+                result.add(r, c);
+        }
+    return result;
+}
+
 void TenMatchRules::applySelection(GameState& state, const GameConfig& config)
 {
     const auto& cells = state.selection.cells();

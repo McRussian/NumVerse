@@ -10,6 +10,7 @@ public:
 
     static bool isMatch(uint16_t a, uint16_t b);
     static bool isNeighbor(const Board& board, int r1, int c1, int r2, int c2);
+    static Selection getAllNeighbors(const Board& board, int row, int col);
 
 private:
     static bool isBoardCleared(const Board& board);
