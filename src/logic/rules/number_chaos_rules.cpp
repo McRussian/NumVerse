@@ -5,6 +5,7 @@
 #include <cmath>
 #include <numeric>
 #include <random>
+#include <set>
 
 // ─── Generator helpers ───────────────────────────────────────────────────────
 
@@ -13,7 +14,7 @@ namespace {
 static const std::vector<uint16_t> FACTORIALS = {1, 2, 6, 24, 120, 720, 5040, 40320};
 
 enum class SeqType {
-    Arithmetic, Geometric, AllEven, AllOdd, AllPrime, Squares, Factorial, SecondOrder
+    Arithmetic, Geometric, AllPrime, Squares, Factorial, SecondOrder
 };
 
 std::vector<SeqType> availableTypes(Difficulty d)
@@ -159,53 +160,78 @@ void NumberChaosRules::initBoard(Board& board, const GameConfig& config)
 {
     std::mt19937 rng{std::random_device{}()};
 
-    const int rows   = config.gridRows;
-    const int cols   = config.gridCols;
-    const int total  = rows * cols;
+    const int rows    = config.gridRows;
+    const int cols    = config.gridCols;
     const uint16_t maxVal = maxValue(config.difficulty);
-    const int maxSeqLen   = (config.difficulty >= Difficulty::Medium) ? 5 : 4;
+    const int minLen  = 3;
+    const int maxLen  = (config.difficulty >= Difficulty::Medium) ? 5 : 4;
+    const auto types  = availableTypes(config.difficulty);
+    const int targetSeqs = 2 + static_cast<int>(config.difficulty);
 
-    const auto types = availableTypes(config.difficulty);
-    // Target: ~60% of cells covered by placed sequences
-    const int numSeqs = std::max(2, total * 3 / 20);
+    std::vector<std::vector<bool>> used(rows, std::vector<bool>(cols, false));
+    std::set<uint16_t> usedVals;
 
-    // Free positions (row-major indices)
-    std::vector<int> free(total);
-    std::iota(free.begin(), free.end(), 0);
+    std::bernoulli_distribution coinFlip(0.5);
+    std::uniform_int_distribution<int> typeDist(0, static_cast<int>(types.size()) - 1);
 
-    for (int s = 0; s < numSeqs && (int)free.size() >= 3; ++s) {
-        bool placed = false;
-        for (int attempt = 0; attempt < 20 && !placed; ++attempt) {
-            SeqType type = types[std::uniform_int_distribution<int>(
-                0, static_cast<int>(types.size()) - 1)(rng)];
-            int len = std::uniform_int_distribution<int>(
-                3, std::min(maxSeqLen, (int)free.size()))(rng);
+    auto tryPlace = [&]() -> bool {
+        for (int attempt = 0; attempt < 40; ++attempt) {
+            bool horiz = coinFlip(rng);
+            int len = std::uniform_int_distribution<int>(minLen, maxLen)(rng);
 
-            auto values = generateSeq(rng, type, len, maxVal);
-            if (values.size() < 3) continue;
-            len = static_cast<int>(values.size());
-            if (len > (int)free.size()) continue;
+            int maxR = horiz ? rows - 1       : rows - len;
+            int maxC = horiz ? cols - len      : cols - 1;
+            if (maxR < 0 || maxC < 0) continue;
 
-            // Pick len random free positions and sort to row-major order
-            std::shuffle(free.begin(), free.end(), rng);
-            std::vector<int> chosen(free.begin(), free.begin() + len);
-            std::sort(chosen.begin(), chosen.end());
+            int r = std::uniform_int_distribution<int>(0, maxR)(rng);
+            int c = std::uniform_int_distribution<int>(0, maxC)(rng);
 
-            for (int i = 0; i < len; ++i)
-                board.at(chosen[i] / cols, chosen[i] % cols) = GameCell(values[i]);
+            bool free = true;
+            for (int i = 0; i < len && free; ++i)
+                if (used[horiz ? r : r + i][horiz ? c + i : c]) free = false;
+            if (!free) continue;
 
-            free.erase(std::remove_if(free.begin(), free.end(), [&](int p) {
-                return std::find(chosen.begin(), chosen.end(), p) != chosen.end();
-            }), free.end());
+            SeqType type = types[typeDist(rng)];
+            for (int genTry = 0; genTry < 15; ++genTry) {
+                auto vals = generateSeq(rng, type, len, maxVal);
+                if ((int)vals.size() < len) continue;
 
-            placed = true;
+                bool unique = true;
+                for (uint16_t v : vals)
+                    if (usedVals.count(v)) { unique = false; break; }
+                if (!unique) continue;
+
+                for (int i = 0; i < len; ++i) {
+                    int rr = horiz ? r     : r + i;
+                    int cc = horiz ? c + i : c;
+                    board.at(rr, cc) = GameCell(vals[i]);
+                    used[rr][cc] = true;
+                    usedVals.insert(vals[i]);
+                }
+                return true;
+            }
+        }
+        return false;
+    };
+
+    for (int s = 0; s < targetSeqs; ++s)
+        tryPlace();
+
+    // Fill remaining cells with noise (visually identical, cannot be selected)
+    std::uniform_int_distribution<uint16_t> noiseDist(1, maxVal);
+    for (int r = 0; r < rows; ++r) {
+        for (int c = 0; c < cols; ++c) {
+            if (!used[r][c]) {
+                uint16_t val;
+                int tries = 0;
+                do { val = noiseDist(rng); } while (usedVals.count(val) && ++tries < 200);
+                GameCell cell(val);
+                cell.setNoise(true);
+                board.at(r, c) = cell;
+                usedVals.insert(val);
+            }
         }
     }
-
-    // Fill remaining cells with noise
-    std::uniform_int_distribution<uint16_t> noise(1, maxVal);
-    for (int pos : free)
-        board.at(pos / cols, pos % cols) = GameCell(noise(rng));
 }
 
 void NumberChaosRules::applySelection(GameState& state, const GameConfig&)
@@ -360,9 +386,11 @@ static bool nextCombination(std::vector<size_t>& idx, size_t n) {
 std::vector<Selection> NumberChaosRules::getHint(const Board& board) const {
     std::vector<std::pair<uint8_t, uint8_t>> cells;
     for (uint8_t r = 0; r < board.rows(); ++r)
-        for (uint8_t c = 0; c < board.cols(); ++c)
-            if (board.at(r, c).state() != CellState::Empty)
+        for (uint8_t c = 0; c < board.cols(); ++c) {
+            const auto& cell = board.at(r, c);
+            if (!cell.isNoise() && cell.state() != CellState::Empty)
                 cells.push_back({r, c});
+        }
 
     size_t n = cells.size();
     if (n < 3) return {};
@@ -389,7 +417,9 @@ std::vector<Selection> NumberChaosRules::getHint(const Board& board) const {
 
 bool NumberChaosRules::isBoardCleared(const Board& board) {
     for (uint8_t r = 0; r < board.rows(); ++r)
-        for (uint8_t c = 0; c < board.cols(); ++c)
-            if (board.at(r, c).state() != CellState::Empty) return false;
+        for (uint8_t c = 0; c < board.cols(); ++c) {
+            const auto& cell = board.at(r, c);
+            if (!cell.isNoise() && cell.state() != CellState::Empty) return false;
+        }
     return true;
 }

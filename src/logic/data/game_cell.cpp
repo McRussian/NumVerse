@@ -24,3 +24,13 @@ void GameCell::setState(CellState state)
 {
     m_state = state;
 }
+
+bool GameCell::isNoise() const
+{
+    return m_noise;
+}
+
+void GameCell::setNoise(bool noise)
+{
+    m_noise = noise;
+}

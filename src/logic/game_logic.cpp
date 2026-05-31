@@ -24,7 +24,7 @@ void GameLogic::select(uint8_t row, uint8_t col) {
     if (!m_state.board.isValid(row, col))
         return;
     const auto& cell = m_state.board.at(row, col);
-    if (cell.state() == CellState::Empty || cell.value() == 0)
+    if (cell.state() == CellState::Empty || cell.value() == 0 || cell.isNoise())
         return;
 
     if (m_state.selection.contains(row, col)) {
@@ -112,7 +112,7 @@ void GameLogic::shuffle() {
     for (uint8_t r = 0; r < m_state.board.rows(); ++r)
         for (uint8_t c = 0; c < m_state.board.cols(); ++c) {
             const auto& cell = m_state.board.at(r, c);
-            if (cell.state() != CellState::Empty && cell.value() != 0) {
+            if (cell.state() != CellState::Empty && cell.value() != 0 && !cell.isNoise()) {
                 positions.push_back({r, c});
                 values.push_back(cell.value());
             }
@@ -133,18 +133,20 @@ void GameLogic::forfeit() {
     if (m_state.status != GameStatus::Playing)
         return;
 
-    // Penalty: score × (cleared / total)
-    int total = m_config.gridRows * m_config.gridCols;
-    if (total > 0) {
-        int remaining = 0;
-        for (uint8_t r = 0; r < m_state.board.rows(); ++r)
-            for (uint8_t c = 0; c < m_state.board.cols(); ++c)
-                if (m_state.board.at(r, c).state() != CellState::Empty)
-                    ++remaining;
-        int cleared = total - remaining;
+    // Penalty: score × (cleared / seqTotal), noise cells are excluded
+    int seqActive = 0, cleared = 0;
+    for (uint8_t r = 0; r < m_state.board.rows(); ++r)
+        for (uint8_t c = 0; c < m_state.board.cols(); ++c) {
+            const auto& cell = m_state.board.at(r, c);
+            if (cell.state() == CellState::Empty)
+                ++cleared;
+            else if (!cell.isNoise())
+                ++seqActive;
+        }
+    int seqTotal = seqActive + cleared;
+    if (seqTotal > 0)
         m_state.score = m_state.score * static_cast<uint32_t>(cleared)
-                        / static_cast<uint32_t>(total);
-    }
+                        / static_cast<uint32_t>(seqTotal);
 
     m_state.status = GameStatus::Lost;
 }

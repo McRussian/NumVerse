@@ -15,9 +15,13 @@ public:
     void setValue(uint16_t value);
     void setState(CellState state);
 
+    bool isNoise() const;
+    void setNoise(bool noise);
+
     bool operator==(const GameCell&) const = default;
 
 private:
     uint16_t  m_value = 0;
     CellState m_state = CellState::Normal;
+    bool      m_noise = false;
 };
