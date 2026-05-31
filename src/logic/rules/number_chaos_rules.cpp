@@ -166,7 +166,7 @@ void NumberChaosRules::initBoard(Board& board, const GameConfig& config)
     const int minLen  = 3;
     const int maxLen  = (config.difficulty >= Difficulty::Medium) ? 5 : 4;
     const auto types  = availableTypes(config.difficulty);
-    const int targetCells = rows * cols * 7 / 10;  // aim for ~70% sequence coverage
+    const int targetCells = rows * cols * 17 / 20;  // aim for ~85% sequence coverage
 
     std::vector<std::vector<bool>> used(rows, std::vector<bool>(cols, false));
     std::set<uint16_t> usedVals;

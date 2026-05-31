@@ -143,20 +143,24 @@ void GameLogic::forfeit() {
     if (m_state.status != GameStatus::Playing)
         return;
 
-    // Penalty: score × (cleared / seqTotal), noise cells are excluded
+    // Penalty: score × (cleared / seqTotal) − sum of remaining sequence cell values
     int seqActive = 0, cleared = 0;
+    uint32_t remainingSum = 0;
     for (uint8_t r = 0; r < m_state.board.rows(); ++r)
         for (uint8_t c = 0; c < m_state.board.cols(); ++c) {
             const auto& cell = m_state.board.at(r, c);
             if (cell.state() == CellState::Empty)
                 ++cleared;
-            else if (!cell.isNoise())
+            else if (!cell.isNoise()) {
                 ++seqActive;
+                remainingSum += cell.value();
+            }
         }
     int seqTotal = seqActive + cleared;
     if (seqTotal > 0)
         m_state.score = m_state.score * static_cast<uint32_t>(cleared)
                         / static_cast<uint32_t>(seqTotal);
+    m_state.score = (remainingSum >= m_state.score) ? 0 : m_state.score - remainingSum;
 
     m_state.status = GameStatus::Lost;
 }
