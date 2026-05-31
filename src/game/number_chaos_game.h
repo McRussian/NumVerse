@@ -7,6 +7,9 @@ class NumberChaosGame : public AbstractGame {
 public:
     explicit NumberChaosGame(std::string playerName, GameConfig config, QObject* parent = nullptr);
 
+public:
+    void selectCell(int row, int col) override;
+
 protected:
     std::unique_ptr<IGameRules> createRules() const override;
 };
