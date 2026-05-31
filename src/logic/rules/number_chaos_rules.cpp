@@ -166,7 +166,7 @@ void NumberChaosRules::initBoard(Board& board, const GameConfig& config)
     const int minLen  = 3;
     const int maxLen  = (config.difficulty >= Difficulty::Medium) ? 5 : 4;
     const auto types  = availableTypes(config.difficulty);
-    const int targetSeqs = 2 + static_cast<int>(config.difficulty);
+    const int targetCells = rows * cols * 7 / 10;  // aim for ~70% sequence coverage
 
     std::vector<std::vector<bool>> used(rows, std::vector<bool>(cols, false));
     std::set<uint16_t> usedVals;
@@ -174,22 +174,33 @@ void NumberChaosRules::initBoard(Board& board, const GameConfig& config)
     std::bernoulli_distribution coinFlip(0.5);
     std::uniform_int_distribution<int> typeDist(0, static_cast<int>(types.size()) - 1);
 
-    auto tryPlace = [&]() -> bool {
+    // Returns number of cells placed (0 on failure).
+    // Sequence cells are placed at random positions within a chosen line —
+    // noise fills the gaps, so the player cannot simply scan adjacent cells.
+    auto tryPlace = [&]() -> int {
         for (int attempt = 0; attempt < 40; ++attempt) {
             bool horiz = coinFlip(rng);
+            int lineIdx = horiz
+                ? std::uniform_int_distribution<int>(0, rows - 1)(rng)
+                : std::uniform_int_distribution<int>(0, cols - 1)(rng);
+
+            // Collect free positions in this line
+            std::vector<int> freePos;
+            if (horiz) {
+                for (int c = 0; c < cols; ++c)
+                    if (!used[lineIdx][c]) freePos.push_back(c);
+            } else {
+                for (int r = 0; r < rows; ++r)
+                    if (!used[r][lineIdx]) freePos.push_back(r);
+            }
+
             int len = std::uniform_int_distribution<int>(minLen, maxLen)(rng);
+            if ((int)freePos.size() < len) continue;
 
-            int maxR = horiz ? rows - 1       : rows - len;
-            int maxC = horiz ? cols - len      : cols - 1;
-            if (maxR < 0 || maxC < 0) continue;
-
-            int r = std::uniform_int_distribution<int>(0, maxR)(rng);
-            int c = std::uniform_int_distribution<int>(0, maxC)(rng);
-
-            bool free = true;
-            for (int i = 0; i < len && free; ++i)
-                if (used[horiz ? r : r + i][horiz ? c + i : c]) free = false;
-            if (!free) continue;
+            // Pick len random positions and sort them (reading order)
+            std::shuffle(freePos.begin(), freePos.end(), rng);
+            std::vector<int> chosen(freePos.begin(), freePos.begin() + len);
+            std::sort(chosen.begin(), chosen.end());
 
             SeqType type = types[typeDist(rng)];
             for (int genTry = 0; genTry < 15; ++genTry) {
@@ -202,20 +213,24 @@ void NumberChaosRules::initBoard(Board& board, const GameConfig& config)
                 if (!unique) continue;
 
                 for (int i = 0; i < len; ++i) {
-                    int rr = horiz ? r     : r + i;
-                    int cc = horiz ? c + i : c;
+                    int rr = horiz ? lineIdx : chosen[i];
+                    int cc = horiz ? chosen[i] : lineIdx;
                     board.at(rr, cc) = GameCell(vals[i]);
                     used[rr][cc] = true;
                     usedVals.insert(vals[i]);
                 }
-                return true;
+                return len;
             }
         }
-        return false;
+        return 0;
     };
 
-    for (int s = 0; s < targetSeqs; ++s)
-        tryPlace();
+    int placedCells = 0;
+    while (placedCells < targetCells) {
+        int n = tryPlace();
+        if (n == 0) break;
+        placedCells += n;
+    }
 
     // Fill remaining cells with noise (visually identical, cannot be selected)
     std::uniform_int_distribution<uint16_t> noiseDist(1, maxVal);
@@ -373,25 +388,38 @@ bool NumberChaosRules::isSecondOrder(const std::vector<uint16_t>& v) {
     return true;
 }
 
+static bool nextCombination(std::vector<size_t>& idx, size_t n) {
+    int i = static_cast<int>(idx.size()) - 1;
+    while (i >= 0 && idx[i] == n - idx.size() + static_cast<size_t>(i)) --i;
+    if (i < 0) return false;
+    ++idx[i];
+    for (size_t j = static_cast<size_t>(i) + 1; j < idx.size(); ++j)
+        idx[j] = idx[j-1] + 1;
+    return true;
+}
+
 std::vector<Selection> NumberChaosRules::getHint(const Board& board) const {
     std::vector<Selection> results;
 
-    // Check all windows of length 3-5 within a contiguous non-noise non-empty segment
-    auto scanSegment = [&](const std::vector<std::pair<uint8_t,uint8_t>>& seg) {
-        size_t n = seg.size();
-        for (size_t start = 0; start < n; ++start) {
-            for (size_t len = 3; len <= std::min(n - start, size_t{5}); ++len) {
+    // Try all combinations of size 3-5 within each row/column.
+    // Sequences can be non-adjacent (noise fills the gaps), so we must
+    // consider all subsets, not just contiguous windows.
+    auto checkLine = [&](const std::vector<std::pair<uint8_t,uint8_t>>& lineCells) {
+        size_t n = lineCells.size();
+        for (size_t len = 3; len <= std::min(n, size_t{5}); ++len) {
+            std::vector<size_t> idx(len);
+            std::iota(idx.begin(), idx.end(), 0);
+            do {
                 std::vector<uint16_t> vals;
                 vals.reserve(len);
-                for (size_t i = start; i < start + len; ++i)
-                    vals.push_back(board.at(seg[i].first, seg[i].second).value());
+                for (size_t i : idx)
+                    vals.push_back(board.at(lineCells[i].first, lineCells[i].second).value());
                 if (isValidSequence(vals)) {
                     Selection sel;
-                    for (size_t i = start; i < start + len; ++i)
-                        sel.add(seg[i].first, seg[i].second);
+                    for (size_t i : idx) sel.add(lineCells[i].first, lineCells[i].second);
                     results.push_back(sel);
                 }
-            }
+            } while (nextCombination(idx, n));
         }
     };
 
@@ -400,32 +428,18 @@ std::vector<Selection> NumberChaosRules::getHint(const Board& board) const {
         return !cell.isNoise() && cell.state() != CellState::Empty;
     };
 
-    // Scan rows
     for (uint8_t r = 0; r < board.rows(); ++r) {
-        std::vector<std::pair<uint8_t,uint8_t>> seg;
-        for (uint8_t c = 0; c < board.cols(); ++c) {
-            if (isSeqCell(r, c)) {
-                seg.push_back({r, c});
-            } else {
-                scanSegment(seg);
-                seg.clear();
-            }
-        }
-        scanSegment(seg);
+        std::vector<std::pair<uint8_t,uint8_t>> cells;
+        for (uint8_t c = 0; c < board.cols(); ++c)
+            if (isSeqCell(r, c)) cells.push_back({r, c});
+        checkLine(cells);
     }
 
-    // Scan columns
     for (uint8_t c = 0; c < board.cols(); ++c) {
-        std::vector<std::pair<uint8_t,uint8_t>> seg;
-        for (uint8_t r = 0; r < board.rows(); ++r) {
-            if (isSeqCell(r, c)) {
-                seg.push_back({r, c});
-            } else {
-                scanSegment(seg);
-                seg.clear();
-            }
-        }
-        scanSegment(seg);
+        std::vector<std::pair<uint8_t,uint8_t>> cells;
+        for (uint8_t r = 0; r < board.rows(); ++r)
+            if (isSeqCell(r, c)) cells.push_back({r, c});
+        checkLine(cells);
     }
 
     return results;

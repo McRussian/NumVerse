@@ -302,22 +302,19 @@ TEST(NumberChaosRulesTest, HintFindsSequence) {
     EXPECT_TRUE(NumberChaosRules::isValidSequence(values));
 }
 
-TEST(NumberChaosRulesTest, HintRespectsCellBoundaries) {
-    // Row: [2,5,8, noise, 10,20,30]
-    // Noise splits the row into two segments; hint finds sequences in each segment
+TEST(NumberChaosRulesTest, HintFindsNonAdjacentSequence) {
+    // Row: [2, noise, 5, noise, 8] — arithmetic seq at positions 0,2,4
+    // Hint must find [2,5,8] across noise cells within the same row
     NumberChaosRules rules;
-    Board board(1, 7);
+    Board board(1, 5);
     board.at(0, 0) = GameCell(2);
-    board.at(0, 1) = GameCell(5);
-    board.at(0, 2) = GameCell(8);
-    GameCell noise(99); noise.setNoise(true);
-    board.at(0, 3) = noise;
-    board.at(0, 4) = GameCell(10);
-    board.at(0, 5) = GameCell(20);
-    board.at(0, 6) = GameCell(30);
+    GameCell n1(99); n1.setNoise(true); board.at(0, 1) = n1;
+    board.at(0, 2) = GameCell(5);
+    GameCell n2(77); n2.setNoise(true); board.at(0, 3) = n2;
+    board.at(0, 4) = GameCell(8);
     auto hints = rules.getHint(board);
     ASSERT_FALSE(hints.empty());
-    // All found hints must lie within a single contiguous segment (no noise/empty gaps)
+    // The found hint must contain cells from the same row only
     for (const auto& h : hints) {
         const auto& cells = h.cells();
         bool sameRow = std::all_of(cells.begin(), cells.end(),
