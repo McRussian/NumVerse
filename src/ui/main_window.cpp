@@ -8,6 +8,10 @@
 #include <QAction>
 #include <QApplication>
 #include <QComboBox>
+#include <QFile>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QLabel>
 #include <QAbstractButton>
 #include <QMessageBox>
@@ -288,61 +292,80 @@ void MainWindow::showHighScores()
     saveScores();  // persist in case records were cleared
 }
 
+static QString scoresFilePath()
+{
+    return QCoreApplication::applicationDirPath() + "/scores.json";
+}
+
+static QJsonArray boardToJson(const ScoreBoard& board)
+{
+    QJsonArray gameArr;
+    for (const auto& [level, records] : board.all()) {
+        for (const auto& r : records) {
+            QJsonObject o;
+            o["level"]      = level;
+            o["playerName"] = QString::fromStdString(r.playerName);
+            o["score"]      = static_cast<qint64>(r.score);
+            o["timeSecs"]   = static_cast<qint64>(r.timeSecs);
+            o["won"]        = r.won;
+            gameArr.append(o);
+        }
+    }
+    return gameArr;
+}
+
+static void boardFromJson(const QJsonArray& arr, ScoreBoard& board)
+{
+    for (const auto& v : arr) {
+        const auto o = v.toObject();
+        GameResult r;
+        r.playerName = o["playerName"].toString().toStdString();
+        r.score      = static_cast<uint32_t>(o["score"].toInteger());
+        r.timeSecs   = static_cast<uint32_t>(o["timeSecs"].toInteger());
+        r.won        = o["won"].toBool();
+        board.add(static_cast<uint8_t>(o["level"].toInt()), r);
+    }
+}
+
 void MainWindow::loadScores()
 {
-    QSettings s;
     const auto games = GameCatalog::allGames();
-
     for (const auto& game : games) {
         GameScoreData& gsd = m_scores[game.id];
         gsd.id   = game.id;
         gsd.name = game.name;
+    }
 
-        auto loadBoard = [&](const char* boardType, ScoreBoard& board) {
-            for (uint8_t level = 0; level < 5; ++level) {
-                QString base = QString("scores/%1/%2/%3")
-                    .arg(game.id).arg(boardType).arg(level);
-                int count = s.value(base + "/count", 0).toInt();
-                for (int i = 0; i < count; ++i) {
-                    QString rb = QString("%1/%2").arg(base).arg(i);
-                    GameResult r;
-                    r.playerName = s.value(rb + "/playerName").toString().toStdString();
-                    r.score      = s.value(rb + "/score").toUInt();
-                    r.timeSecs   = s.value(rb + "/timeSecs").toUInt();
-                    r.won        = s.value(rb + "/won").toBool();
-                    board.add(level, r);
-                }
-            }
-        };
+    QFile f(scoresFilePath());
+    if (!f.open(QIODevice::ReadOnly)) return;
 
-        loadBoard("byScore", gsd.byScore);
-        loadBoard("byTime",  gsd.byTime);
+    const auto root = QJsonDocument::fromJson(f.readAll()).object();
+    for (const auto& gameVal : root["games"].toArray()) {
+        const auto go = gameVal.toObject();
+        int id = go["id"].toInt();
+        if (!m_scores.count(id)) continue;
+        boardFromJson(go["byScore"].toArray(), m_scores[id].byScore);
+        boardFromJson(go["byTime"].toArray(),  m_scores[id].byTime);
     }
 }
 
 void MainWindow::saveScores()
 {
-    QSettings s;
-    s.remove("scores");
-
-    for (const auto& [gameId, gsd] : m_scores) {
-        auto saveBoard = [&](const char* boardType, const ScoreBoard& board) {
-            for (const auto& [level, records] : board.all()) {
-                QString base = QString("scores/%1/%2/%3")
-                    .arg(gameId).arg(boardType).arg(level);
-                s.setValue(base + "/count", (int)records.size());
-                for (int i = 0; i < (int)records.size(); ++i) {
-                    QString rb = QString("%1/%2").arg(base).arg(i);
-                    s.setValue(rb + "/playerName", QString::fromStdString(records[i].playerName));
-                    s.setValue(rb + "/score",      records[i].score);
-                    s.setValue(rb + "/timeSecs",   records[i].timeSecs);
-                    s.setValue(rb + "/won",        records[i].won);
-                }
-            }
-        };
-        saveBoard("byScore", gsd.byScore);
-        saveBoard("byTime",  gsd.byTime);
+    QJsonArray games;
+    for (const auto& [id, gsd] : m_scores) {
+        QJsonObject go;
+        go["id"]      = id;
+        go["byScore"] = boardToJson(gsd.byScore);
+        go["byTime"]  = boardToJson(gsd.byTime);
+        games.append(go);
     }
+
+    QJsonObject root;
+    root["games"] = games;
+
+    QFile f(scoresFilePath());
+    if (f.open(QIODevice::WriteOnly))
+        f.write(QJsonDocument(root).toJson());
 }
 
 void MainWindow::updateGameStatus(const GameState& state)
