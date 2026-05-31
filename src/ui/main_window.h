@@ -77,6 +77,8 @@ private:
     void disconnectGame();
     void setGameControlsVisible(bool visible);
     void showHighScores();
+    void loadScores();
+    void saveScores();
 
     static QString formatTime(uint32_t secs);
 };

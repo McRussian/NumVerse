@@ -100,6 +100,7 @@ MainWindow::MainWindow(QWidget* parent)
     });
 
     onPlayerChanged(m_menu->currentPlayerName());
+    loadScores();
 }
 
 Difficulty MainWindow::currentDifficulty() const
@@ -254,6 +255,7 @@ void MainWindow::onGameOver(const GameResult& result)
     const bool r1 = gsd.byScore.add(lvl, result);
     const bool r2 = gsd.byTime.add(lvl, result);
     const bool newRecord = r1 || r2;
+    saveScores();
 
     QString msg = result.won
         ? QString("Победа!\nСчёт: %1   Время: %2%3")
@@ -283,6 +285,64 @@ void MainWindow::showHighScores()
 {
     HighScoreDialog dlg(m_scores, this);
     dlg.exec();
+    saveScores();  // persist in case records were cleared
+}
+
+void MainWindow::loadScores()
+{
+    QSettings s;
+    const auto games = GameCatalog::allGames();
+
+    for (const auto& game : games) {
+        GameScoreData& gsd = m_scores[game.id];
+        gsd.id   = game.id;
+        gsd.name = game.name;
+
+        auto loadBoard = [&](const char* boardType, ScoreBoard& board) {
+            for (uint8_t level = 0; level < 5; ++level) {
+                QString base = QString("scores/%1/%2/%3")
+                    .arg(game.id).arg(boardType).arg(level);
+                int count = s.value(base + "/count", 0).toInt();
+                for (int i = 0; i < count; ++i) {
+                    QString rb = QString("%1/%2").arg(base).arg(i);
+                    GameResult r;
+                    r.playerName = s.value(rb + "/playerName").toString().toStdString();
+                    r.score      = s.value(rb + "/score").toUInt();
+                    r.timeSecs   = s.value(rb + "/timeSecs").toUInt();
+                    r.won        = s.value(rb + "/won").toBool();
+                    board.add(level, r);
+                }
+            }
+        };
+
+        loadBoard("byScore", gsd.byScore);
+        loadBoard("byTime",  gsd.byTime);
+    }
+}
+
+void MainWindow::saveScores()
+{
+    QSettings s;
+    s.remove("scores");
+
+    for (const auto& [gameId, gsd] : m_scores) {
+        auto saveBoard = [&](const char* boardType, const ScoreBoard& board) {
+            for (const auto& [level, records] : board.all()) {
+                QString base = QString("scores/%1/%2/%3")
+                    .arg(gameId).arg(boardType).arg(level);
+                s.setValue(base + "/count", (int)records.size());
+                for (int i = 0; i < (int)records.size(); ++i) {
+                    QString rb = QString("%1/%2").arg(base).arg(i);
+                    s.setValue(rb + "/playerName", QString::fromStdString(records[i].playerName));
+                    s.setValue(rb + "/score",      records[i].score);
+                    s.setValue(rb + "/timeSecs",   records[i].timeSecs);
+                    s.setValue(rb + "/won",        records[i].won);
+                }
+            }
+        };
+        saveBoard("byScore", gsd.byScore);
+        saveBoard("byTime",  gsd.byTime);
+    }
 }
 
 void MainWindow::updateGameStatus(const GameState& state)
