@@ -23,6 +23,11 @@ void AbstractGame::selectCell(int row, int col)
 
 void AbstractGame::applySelection()
 {
+    if (m_logic.getState().selection.empty() && !m_hints.empty()) {
+        size_t lastIdx = (m_hintIndex + m_hints.size() - 1) % m_hints.size();
+        for (auto [r, c] : m_hints[lastIdx].cells())
+            m_logic.select(r, c);
+    }
     m_logic.applySelection();
     resetHints();
     emitStateSignals();
@@ -36,14 +41,10 @@ void AbstractGame::tick(uint32_t secs)
 
 void AbstractGame::hint()
 {
-    if (m_hints.empty()) {
-        m_hints = m_logic.getHint();
-        m_hintIndex = 0;
-    }
-    if (m_hints.empty())
-        return;
-    emit hintReady(m_hints[m_hintIndex]);
-    m_hintIndex = (m_hintIndex + 1) % m_hints.size();
+    m_hints = m_logic.getHint();  // re-fetch each time, filtered by current selection
+    if (m_hints.empty()) return;
+    emit hintReady(m_hints[m_hintIndex % m_hints.size()]);
+    ++m_hintIndex;
 }
 
 void AbstractGame::undo()

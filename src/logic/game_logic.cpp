@@ -165,7 +165,22 @@ const GameState& GameLogic::getState() const {
 }
 
 std::vector<Selection> GameLogic::getHint() const {
-    return m_rules->getHint(m_state.board);
+    auto hints = m_rules->getHint(m_state.board);
+
+    const auto& selCells = m_state.selection.cells();
+    if (selCells.empty()) return hints;
+
+    // Keep only hints where selected cells appear as a subsequence (in order)
+    std::vector<Selection> filtered;
+    for (const auto& hint : hints) {
+        const auto& hc = hint.cells();
+        size_t si = 0;
+        for (const auto& cell : hc) {
+            if (si < selCells.size() && cell == selCells[si]) ++si;
+        }
+        if (si == selCells.size()) filtered.push_back(hint);
+    }
+    return filtered.empty() ? hints : filtered;
 }
 
 GameResult GameLogic::buildResult(const std::string& playerName) const {
